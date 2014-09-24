@@ -1,4 +1,4 @@
-package com.housetrip.pockettrailer;
+package it.alessandromencarini.droidtrailer;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

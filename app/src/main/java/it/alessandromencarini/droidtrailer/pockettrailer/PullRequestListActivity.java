@@ -1,4 +1,4 @@
-package com.housetrip.pockettrailer;
+package it.alessandromencarini.droidtrailer;
 
 import android.app.ListActivity;
 import android.content.Intent;

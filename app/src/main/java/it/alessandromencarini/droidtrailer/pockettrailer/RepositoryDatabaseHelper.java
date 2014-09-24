@@ -1,8 +1,6 @@
-package com.housetrip.pockettrailer;
+package it.alessandromencarini.droidtrailer;
 
 import android.content.Context;
-
-import java.util.ArrayList;
 
 /**
  * Created by alessandromencarini on 23/09/2014.

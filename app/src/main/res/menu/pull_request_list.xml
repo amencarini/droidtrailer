@@ -1,6 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.housetrip.pockettrailer.PullRequestListActivity" >
+    tools:context="it.alessandromencarini.droidtrailer.PullRequestListActivity" >
     <item android:id="@+id/action_refresh"
         android:title="@string/action_refresh"
         android:orderInCategory="100"

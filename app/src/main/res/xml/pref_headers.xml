@@ -3,7 +3,7 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="com.housetrip.pockettrailer.SettingsActivity$GeneralPreferenceFragment"
+        android:fragment="it.alessandromencarini.droidtrailer.SettingsActivity$GeneralPreferenceFragment"
         android:title="@string/pref_header_general"
         android:summary="Test"
         android:icon="@android:drawable/checkbox_on_background"

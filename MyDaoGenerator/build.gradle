@@ -2,7 +2,7 @@ project(':MyDaoGenerator') {
     apply plugin: 'application'
     apply plugin: 'java'
 
-    mainClassName = "com.housetrip.pockettrailer.MyDaoGenerator"
+    mainClassName = "it.alessandromencarini.droidtrailer.MyDaoGenerator"
     // edit output direction
     outputDir = "../app/src/main/java"
 

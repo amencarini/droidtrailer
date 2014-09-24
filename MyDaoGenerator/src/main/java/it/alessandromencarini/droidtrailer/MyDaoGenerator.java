@@ -1,4 +1,4 @@
-package com.housetrip.pockettrailer;
+package it.alessandromencarini.droidtrailer;
 
 import de.greenrobot.daogenerator.DaoGenerator;
 import de.greenrobot.daogenerator.Entity;
@@ -9,7 +9,7 @@ import de.greenrobot.daogenerator.ToMany;
 public class MyDaoGenerator {
 
     public static void main(String args[]) throws Exception {
-        Schema schema = new Schema(1, "com.housetrip.pockettrailer");
+        Schema schema = new Schema(1, "it.alessandromencarini.droidtrailer");
 
         Entity pullRequest = schema.addEntity("PullRequest");
         pullRequest.addIdProperty();

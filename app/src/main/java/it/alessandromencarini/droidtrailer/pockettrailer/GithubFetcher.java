@@ -1,4 +1,4 @@
-package com.housetrip.pockettrailer;
+package it.alessandromencarini.droidtrailer;
 
 import android.net.Uri;
 import android.util.Log;
