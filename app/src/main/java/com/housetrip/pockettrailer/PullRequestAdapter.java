@@ -8,7 +8,6 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by alessandromencarini on 18/09/2014.
@@ -35,6 +34,9 @@ public class PullRequestAdapter extends ArrayAdapter<PullRequest> {
 
         TextView authorTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_author);
         authorTextView.setText(pullRequest.getAuthor());
+
+        TextView stateTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_state);
+        stateTextView.setText(pullRequest.getState());
 
         return rowView;
     }

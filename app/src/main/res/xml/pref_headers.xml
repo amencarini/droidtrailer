@@ -4,14 +4,9 @@
 
     <header
         android:fragment="com.housetrip.pockettrailer.SettingsActivity$GeneralPreferenceFragment"
-        android:title="@string/pref_header_general" />
-
-    <header
-        android:fragment="com.housetrip.pockettrailer.SettingsActivity$NotificationPreferenceFragment"
-        android:title="@string/pref_header_notifications" />
-
-    <header
-        android:fragment="com.housetrip.pockettrailer.SettingsActivity$DataSyncPreferenceFragment"
-        android:title="@string/pref_header_data_sync" />
+        android:title="@string/pref_header_general"
+        android:summary="Test"
+        android:icon="@android:drawable/checkbox_on_background"
+        />
 
 </preference-headers>
