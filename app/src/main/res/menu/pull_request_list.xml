@@ -5,9 +5,12 @@
         android:title="@string/action_refresh"
         android:orderInCategory="100"
         android:showAsAction="never" />
-
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
+        android:orderInCategory="100"
+        android:showAsAction="never" />
+    <item android:id="@+id/action_repositories"
+        android:title="@string/action_repositories"
         android:orderInCategory="100"
         android:showAsAction="never" />
 </menu>

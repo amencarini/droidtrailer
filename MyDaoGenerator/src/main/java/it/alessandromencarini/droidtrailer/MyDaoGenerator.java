@@ -25,6 +25,10 @@ public class MyDaoGenerator {
         Entity repository = schema.addEntity("Repository");
         repository.addIdProperty();
         repository.addStringProperty("fullName");
+        repository.addLongProperty("remoteId");
+        repository.addBooleanProperty("selected");
+
+        repository.setHasKeepSections(true);
 
         Property repositoryId = pullRequest.addLongProperty("repositoryId").notNull().getProperty();
 

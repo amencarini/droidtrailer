@@ -2,6 +2,8 @@ package it.alessandromencarini.droidtrailer;
 
 import android.content.Context;
 
+import java.util.ArrayList;
+
 /**
  * Created by alessandromencarini on 23/09/2014.
  */
@@ -18,6 +20,10 @@ public class RepositoryDatabaseHelper extends DatabaseHelper {
 //        return (ArrayList<Repository>)mRepositoryDao.queryBuilder().list();
 //    }
 
+    public ArrayList<Repository> getAllRepositories() {
+        return (ArrayList<Repository>)mRepositoryDao.queryBuilder().list();
+    }
+
     public long insert(Repository repository) {
         return mRepositoryDao.insert(repository);
     }
@@ -30,5 +36,15 @@ public class RepositoryDatabaseHelper extends DatabaseHelper {
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
+    }
+
+    public void update(Repository repository) {
+        mRepositoryDao.update(repository);
+    }
+
+    public ArrayList<Repository> getSelectedRepositories() {
+        return (ArrayList<Repository>)mRepositoryDao.queryBuilder()
+                .where(RepositoryDao.Properties.Selected.eq(true))
+                .list();
     }
 }

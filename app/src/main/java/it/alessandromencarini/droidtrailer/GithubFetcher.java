@@ -26,6 +26,7 @@ public class GithubFetcher {
     //    "https://api.github.com/repos/HouseTrip/HouseTrip-Web-App/pulls?access_token=6d126937d1b3e58bf1348aafd929279945f662f7"
     private static final String ENDPOINT = "https://api.github.com";
     private static final String PART_REPOSITORY = "/repos";
+    private static final String PART_SUBSCRIPTIONS = "/user/subscriptions";
     private static final String PART_PULL_REQUESTS = "/pulls";
 
     public GithubFetcher(String apiKey) {
@@ -60,22 +61,26 @@ public class GithubFetcher {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public ArrayList<PullRequest> fetchPullRequestsForRepository(String repository) throws JSONException {
+    public ArrayList<PullRequest> fetchPullRequestsForRepository(Repository repository) throws JSONException {
         ArrayList<PullRequest> pullRequests = new ArrayList<PullRequest>();
 
+        // TODO: Block requests if apikey is not available
+        // TODO: reduce duplication
         try {
-            String baseUri = ENDPOINT + PART_REPOSITORY + "/" +  repository + PART_PULL_REQUESTS;
+            String baseUri = ENDPOINT + PART_REPOSITORY + "/" +  repository.getFullName() + PART_PULL_REQUESTS;
 
             String url = Uri.parse(baseUri).buildUpon()
                     .appendQueryParameter("access_token", mApiKey)
                     .build().toString();
-            String result = new GithubFetcher(mApiKey).getUrl(url);
+            String result = getUrl(url);
 
             JSONArray jsonObjects = new JSONArray(result);
 
             for (int i = 0; i < jsonObjects.length(); i++) {
-                JSONObject pullRequest = jsonObjects.getJSONObject(i);
-                pullRequests.add(new PullRequest(pullRequest));
+                JSONObject pullRequestJSON = jsonObjects.getJSONObject(i);
+                PullRequest pullRequest = new PullRequest(pullRequestJSON);
+                pullRequest.setRepositoryId(repository.getId());
+                pullRequests.add(pullRequest);
             }
 
         } catch (IOException ioe) {
@@ -83,5 +88,45 @@ public class GithubFetcher {
         }
 
         return pullRequests;
+    }
+
+    public ArrayList<Repository> fetchRepositories() throws JSONException {
+        ArrayList<Repository> repositories = new ArrayList<Repository>();
+
+        // TODO: Block requests if apikey is not available
+        // TODO: reduce duplication
+        try {
+            String baseUri = ENDPOINT + PART_SUBSCRIPTIONS;
+
+            Integer page = 1;
+            Boolean getMore = true;
+
+
+            while (getMore) {
+                String url = Uri.parse(baseUri).buildUpon()
+                        .appendQueryParameter("access_token", mApiKey)
+                        .appendQueryParameter("page", page.toString())
+                        .build().toString();
+                String result = getUrl(url);
+
+                JSONArray jsonObjects = new JSONArray(result);
+
+                for (int i = 0; i < jsonObjects.length(); i++) {
+                    JSONObject repository = jsonObjects.getJSONObject(i);
+                    repositories.add(new Repository(repository));
+                }
+
+                if (jsonObjects.length() > 0) {
+                    page++;
+                } else {
+                    getMore = false;
+                }
+            }
+
+        } catch (IOException ioe) {
+            Log.e(TAG, "Failed to fetch repositories: ", ioe);
+        }
+
+        return repositories;
     }
 }

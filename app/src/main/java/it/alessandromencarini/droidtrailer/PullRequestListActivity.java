@@ -27,6 +27,8 @@ public class PullRequestListActivity extends ListActivity {
     private PullRequestDatabaseHelper mPullRequestHelper;
     private RepositoryDatabaseHelper mRepositoryHelper;
 
+    // TODO: Transfer view handling to
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,15 +48,8 @@ public class PullRequestListActivity extends ListActivity {
     }
 
     private void refreshList(ArrayList<PullRequest> incomingPullRequests) {
-        Repository repository = mRepositoryHelper.findByFullName("amencarini/dummy");
-        if (repository == null) {
-            repository = new Repository();
-            repository.setFullName("amencarini/dummy");
-            repository.setId(mRepositoryHelper.insert(repository));
-        }
-
         // Get PRs that are already stored
-        List<PullRequest> storedPullRequests = repository.getPullRequestList();
+        List<PullRequest> storedPullRequests = mPullRequestHelper.getAllPullRequests();
 
         // Mark for destruction, we'll preserve the ones that are still reported
         for (PullRequest storedPullRequest : storedPullRequests) {
@@ -63,7 +58,6 @@ public class PullRequestListActivity extends ListActivity {
 
         for (PullRequest incomingPullRequest : incomingPullRequests) {
             int position = storedPullRequests.indexOf(incomingPullRequest);
-            incomingPullRequest.setRepositoryId(repository.getId());
 
             if (position == -1) {
                 mPullRequestHelper.insert(incomingPullRequest);
@@ -107,13 +101,15 @@ public class PullRequestListActivity extends ListActivity {
         int id = item.getItemId();
 
         switch (id) {
-            case R.id.action_settings:
-                Intent i = new Intent(this, SettingsActivity.class);
-                startActivity(i);
-                break;
             case R.id.action_refresh:
                 new FetchPullRequestsTask().execute();
-                break;
+                return true;
+            case R.id.action_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case R.id.action_repositories:
+                startActivity(new Intent(this, RepositoryActivity.class));
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -133,13 +129,19 @@ public class PullRequestListActivity extends ListActivity {
         @Override
         protected ArrayList<PullRequest> doInBackground(Void... params) {
             ArrayList<PullRequest> pullRequests = new ArrayList<PullRequest>();
-            try {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
-                String apiKey = prefs.getString("github_key", "");
-                pullRequests = new GithubFetcher(apiKey).fetchPullRequestsForRepository("amencarini/dummy");
-            } catch (JSONException e) {
-                Log.e(TAG, "JSON problems: ", e);
+
+            ArrayList<Repository> selectedRepositories = mRepositoryHelper.getSelectedRepositories();
+
+            for (Repository repository : selectedRepositories) {
+                try {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
+                    String apiKey = prefs.getString("github_key", "");
+                    pullRequests.addAll(new GithubFetcher(apiKey).fetchPullRequestsForRepository(repository));
+                } catch (JSONException e) {
+                    Log.e(TAG, "JSON problems: ", e);
+                }
             }
+
             return pullRequests;
         }
 

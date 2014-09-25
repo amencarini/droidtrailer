@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Pocket Trailer</string>
+    <string name="app_name">Trailer</string>
     <string name="title_activity_pull_request_list">PullRequestListActivity</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_refresh">Refresh</string>
-    <string name="pref_github_key_title">Github Key</string>
-    <string name="pref_github_key_hint">Find your key in your Github account preferences</string>
+    <string name="action_repositories">Repositories</string>
+    <string name="pref_github_key_title">GitHub Key</string>
+    <string name="pref_github_key_hint">On GitHub: Settings | Applications</string>
+    <string name="title_activity_repository">Repositories</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="no_repositories">There are no repositories available.</string>
 
 </resources>
