@@ -92,6 +92,12 @@ public class RepositoryActivity extends ListActivity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mRepositoryHelper.deletePullRequestsFromUnselectedRepositories();
+    }
+
     private class FetchRepositoriesTask extends AsyncTask<Void, Void, ArrayList<Repository>> {
         private static final String TAG = "FetchRepositoriesTask";
 

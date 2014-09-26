@@ -3,6 +3,7 @@ package it.alessandromencarini.droidtrailer;
 import android.content.Context;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by alessandromencarini on 23/09/2014.
@@ -46,5 +47,19 @@ public class RepositoryDatabaseHelper extends DatabaseHelper {
         return (ArrayList<Repository>)mRepositoryDao.queryBuilder()
                 .where(RepositoryDao.Properties.Selected.eq(true))
                 .list();
+    }
+
+    public void deletePullRequestsFromUnselectedRepositories() {
+        List<Repository> unselectedRepositories = mRepositoryDao.queryBuilder()
+                .whereOr(
+                        RepositoryDao.Properties.Selected.eq(false),
+                        RepositoryDao.Properties.Selected.isNull()
+                ).list();
+
+        for (Repository repository : unselectedRepositories) {
+            for (PullRequest pullRequest : repository.getPullRequestList()) {
+                mDaoSession.delete(pullRequest);
+            }
+        }
     }
 }

@@ -35,4 +35,8 @@ public class PullRequestDatabaseHelper extends DatabaseHelper {
     public void update(PullRequest pullRequest) {
         mPullRequestDao.update(pullRequest);
     }
+
+    public void delete(PullRequest pullRequest) {
+        mPullRequestDao.delete(pullRequest);
+    }
 }

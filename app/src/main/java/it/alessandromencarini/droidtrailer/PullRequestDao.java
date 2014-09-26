@@ -35,7 +35,9 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         public final static Property Url = new Property(4, String.class, "url", false, "URL");
         public final static Property Number = new Property(5, Integer.class, "number", false, "NUMBER");
         public final static Property CreatedAt = new Property(6, java.util.Date.class, "createdAt", false, "CREATED_AT");
-        public final static Property RepositoryId = new Property(7, long.class, "repositoryId", false, "REPOSITORY_ID");
+        public final static Property ClosedAt = new Property(7, java.util.Date.class, "closedAt", false, "CLOSED_AT");
+        public final static Property MergedAt = new Property(8, java.util.Date.class, "mergedAt", false, "MERGED_AT");
+        public final static Property RepositoryId = new Property(9, long.class, "repositoryId", false, "REPOSITORY_ID");
     };
 
     private DaoSession daoSession;
@@ -62,7 +64,9 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
                 "'URL' TEXT," + // 4: url
                 "'NUMBER' INTEGER," + // 5: number
                 "'CREATED_AT' INTEGER," + // 6: createdAt
-                "'REPOSITORY_ID' INTEGER NOT NULL );"); // 7: repositoryId
+                "'CLOSED_AT' INTEGER," + // 7: closedAt
+                "'MERGED_AT' INTEGER," + // 8: mergedAt
+                "'REPOSITORY_ID' INTEGER NOT NULL );"); // 9: repositoryId
     }
 
     /** Drops the underlying database table. */
@@ -110,7 +114,17 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         if (createdAt != null) {
             stmt.bindLong(7, createdAt.getTime());
         }
-        stmt.bindLong(8, entity.getRepositoryId());
+ 
+        java.util.Date closedAt = entity.getClosedAt();
+        if (closedAt != null) {
+            stmt.bindLong(8, closedAt.getTime());
+        }
+ 
+        java.util.Date mergedAt = entity.getMergedAt();
+        if (mergedAt != null) {
+            stmt.bindLong(9, mergedAt.getTime());
+        }
+        stmt.bindLong(10, entity.getRepositoryId());
     }
 
     @Override
@@ -136,7 +150,9 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // url
             cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // number
             cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // createdAt
-            cursor.getLong(offset + 7) // repositoryId
+            cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // closedAt
+            cursor.isNull(offset + 8) ? null : new java.util.Date(cursor.getLong(offset + 8)), // mergedAt
+            cursor.getLong(offset + 9) // repositoryId
         );
         return entity;
     }
@@ -151,7 +167,9 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         entity.setUrl(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
         entity.setNumber(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
         entity.setCreatedAt(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
-        entity.setRepositoryId(cursor.getLong(offset + 7));
+        entity.setClosedAt(cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)));
+        entity.setMergedAt(cursor.isNull(offset + 8) ? null : new java.util.Date(cursor.getLong(offset + 8)));
+        entity.setRepositoryId(cursor.getLong(offset + 9));
      }
     
     /** @inheritdoc */

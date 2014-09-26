@@ -13,6 +13,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by alessandromencarini on 18/09/2014.
@@ -23,7 +27,6 @@ public class GithubFetcher {
 
     private static final String TAG      = "GithubFetcher";
 
-    //    "https://api.github.com/repos/HouseTrip/HouseTrip-Web-App/pulls?access_token=6d126937d1b3e58bf1348aafd929279945f662f7"
     private static final String ENDPOINT = "https://api.github.com";
     private static final String PART_REPOSITORY = "/repos";
     private static final String PART_SUBSCRIPTIONS = "/user/subscriptions";
@@ -33,7 +36,25 @@ public class GithubFetcher {
         mApiKey = apiKey;
     }
 
-    byte[] getUrlBytes(String urlSpec) throws IOException {
+    private class Response {
+        private String mBody;
+        private Map<String, List<String>> mHeaders;
+
+        private Response(String body, Map<String, List<String>> headers) {
+            mBody = body;
+            mHeaders = headers;
+        }
+
+        public String getBody() {
+            return mBody;
+        }
+
+        public Map<String, List<String>> getHeaders() {
+            return mHeaders;
+        }
+    }
+
+    Response getUrl(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
@@ -51,14 +72,13 @@ public class GithubFetcher {
                 out.write(buffer, 0, bytesRead);
             }
             out.close();
-            return out.toByteArray();
+
+            String body = new String(out.toByteArray());
+
+            return new Response(body, connection.getHeaderFields());
         } finally {
             connection.disconnect();
         }
-    }
-
-    public String getUrl(String urlSpec) throws IOException {
-        return new String(getUrlBytes(urlSpec));
     }
 
     public ArrayList<PullRequest> fetchPullRequestsForRepository(Repository repository) throws JSONException {
@@ -72,7 +92,7 @@ public class GithubFetcher {
             String url = Uri.parse(baseUri).buildUpon()
                     .appendQueryParameter("access_token", mApiKey)
                     .build().toString();
-            String result = getUrl(url);
+            String result = getUrl(url).getBody();
 
             JSONArray jsonObjects = new JSONArray(result);
 
@@ -98,35 +118,56 @@ public class GithubFetcher {
         try {
             String baseUri = ENDPOINT + PART_SUBSCRIPTIONS;
 
-            Integer page = 1;
-            Boolean getMore = true;
+            String url = Uri.parse(baseUri).buildUpon()
+                    .appendQueryParameter("access_token", mApiKey)
+                    .build().toString();
 
+            do {
+                Response response = getUrl(url);
 
-            while (getMore) {
-                String url = Uri.parse(baseUri).buildUpon()
-                        .appendQueryParameter("access_token", mApiKey)
-                        .appendQueryParameter("page", page.toString())
-                        .build().toString();
-                String result = getUrl(url);
-
-                JSONArray jsonObjects = new JSONArray(result);
+                JSONArray jsonObjects = new JSONArray(response.getBody());
 
                 for (int i = 0; i < jsonObjects.length(); i++) {
                     JSONObject repository = jsonObjects.getJSONObject(i);
                     repositories.add(new Repository(repository));
                 }
 
-                if (jsonObjects.length() > 0) {
-                    page++;
-                } else {
-                    getMore = false;
-                }
-            }
+                List<String> nextHeader = response.getHeaders().get("Link");
+                String nextUrl = nextHeader.get(0);
+                Pattern pattern = Pattern.compile("<(.*)>; rel=\"next\"");
+                Matcher matcher = pattern.matcher(nextUrl);
 
+                if (matcher.find()) {
+                    url = matcher.group(1);
+                } else {
+                    url = null;
+                }
+            } while (url != null);
         } catch (IOException ioe) {
             Log.e(TAG, "Failed to fetch repositories: ", ioe);
         }
 
         return repositories;
+    }
+
+    public PullRequest updatePullRequest(PullRequest pullRequest) throws JSONException {
+        String baseUri = ENDPOINT + PART_REPOSITORY + "/" + pullRequest.getRepository().getFullName() + PART_PULL_REQUESTS + "/" + pullRequest.getNumber();
+        String url = Uri.parse(baseUri).buildUpon()
+                .appendQueryParameter("access_token", mApiKey)
+                .build().toString();
+
+        PullRequest updatedPullRequest;
+
+        try {
+            Response response = getUrl(url);
+            JSONObject pullRequestJSON = new JSONObject(response.getBody());
+            updatedPullRequest = new PullRequest(pullRequestJSON);
+            updatedPullRequest.setId(pullRequest.getId());
+            updatedPullRequest.setRepositoryId(pullRequest.getRepositoryId());
+            return updatedPullRequest;
+        } catch (IOException ioe) {
+            Log.e(TAG, "Failed to fetch URL: ", ioe);
+            return pullRequest;
+        }
     }
 }

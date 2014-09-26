@@ -1,8 +1,15 @@
 package it.alessandromencarini.droidtrailer;
 
 import android.app.ListActivity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,9 +24,11 @@ import android.widget.Toast;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class PullRequestListActivity extends ListActivity {
+    private final int REQUEST_CODE_REPOSITORY_ACTIVITY = 0;
 
     private ArrayList<PullRequest> mPullRequests;
     private PullRequestAdapter mPullRequestAdapter;
@@ -73,7 +82,7 @@ public class PullRequestListActivity extends ListActivity {
 
         for (PullRequest storedPullRequest : storedPullRequests) {
             if (storedPullRequest.getMarkedForDestruction()) {
-                Toast.makeText(this, "Can't find PR " + storedPullRequest.getTitle(), Toast.LENGTH_LONG).show();
+                new UpdatePullRequestTask(storedPullRequest).execute();
             }
         }
 
@@ -108,11 +117,22 @@ public class PullRequestListActivity extends ListActivity {
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             case R.id.action_repositories:
-                startActivity(new Intent(this, RepositoryActivity.class));
+                startActivityForResult(new Intent(this, RepositoryActivity.class), REQUEST_CODE_REPOSITORY_ACTIVITY);
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_REPOSITORY_ACTIVITY:
+                mPullRequests.clear();
+                mPullRequests = mPullRequestHelper.getAllPullRequests();
+                mPullRequestAdapter.notifyDataSetChanged();
+        }
+
     }
 
     @Override
@@ -121,6 +141,80 @@ public class PullRequestListActivity extends ListActivity {
 
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(pullRequest.getUrl()));
         startActivity(browserIntent);
+    }
+
+    private void updatePullRequest(PullRequest pullRequest) {
+        mPullRequestHelper.update(pullRequest);
+
+        Resources r = getResources();
+        PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(Intent.ACTION_VIEW, Uri.parse(pullRequest.getUrl())), 0);
+
+        Drawable blankDrawable = r.getDrawable(R.drawable.trailer_icon);
+        Bitmap blankBitmap=((BitmapDrawable)blankDrawable).getBitmap();
+
+        long timestamp;
+        long timeadj = 24*60*60*1000;
+
+        if (pullRequest.getCurrentState() == "merged") {
+            timestamp = pullRequest.getMergedAt().getTime() - timeadj;
+        } else if (pullRequest.getCurrentState() == "closed") {
+            timestamp = pullRequest.getClosedAt().getTime() - timeadj - timeadj;
+        } else {
+            timestamp = new Date().getTime();
+        }
+
+        Notification notification = new Notification.Builder(this)
+                .setWhen(timestamp)
+                .setTicker("PR " + pullRequest.getCurrentState() + "!")
+                .setContentTitle("PR " + pullRequest.getCurrentState() + "!")
+                .setContentText(pullRequest.getTitle())
+                .setSmallIcon(R.drawable.trailer_icon)
+                .setLargeIcon(blankBitmap)
+                .setContentIntent(pi)
+                .setAutoCancel(true)
+                .build();
+
+        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(0, notification);
+
+        int position = mPullRequests.indexOf(pullRequest);
+        mPullRequests.set(position, pullRequest);
+        mPullRequestAdapter.notifyDataSetChanged();
+    }
+
+    private class UpdatePullRequestTask extends AsyncTask<Void, Void, PullRequest> {
+        private static final String TAG = "UpdatePullRequestTask";
+        private PullRequest mPullRequest;
+
+        public UpdatePullRequestTask(PullRequest pullRequest) {
+            super();
+            mPullRequest = pullRequest;
+        }
+
+        @Override
+        protected PullRequest doInBackground(Void... params) {
+            String startingState = mPullRequest.getState();
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
+            String apiKey = prefs.getString("github_key", "");
+            try {
+                mPullRequest = new GithubFetcher(apiKey).updatePullRequest(mPullRequest);
+            } catch (JSONException e) {
+                Log.e(TAG, "JSON problems: ", e);
+            }
+
+            if (mPullRequest.getState().equals(startingState)) {
+                return null;
+            } else {
+                return mPullRequest;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(PullRequest pullRequest) {
+            if (pullRequest != null)
+                updatePullRequest(pullRequest);
+        }
     }
 
     private class FetchPullRequestsTask extends AsyncTask<Void, Void, ArrayList<PullRequest>> {

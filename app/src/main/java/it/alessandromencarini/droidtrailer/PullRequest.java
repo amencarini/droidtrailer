@@ -25,6 +25,8 @@ public class PullRequest {
     private String url;
     private Integer number;
     private java.util.Date createdAt;
+    private java.util.Date closedAt;
+    private java.util.Date mergedAt;
     private long repositoryId;
 
     /** Used to resolve relations */
@@ -51,7 +53,7 @@ public class PullRequest {
         this.id = id;
     }
 
-    public PullRequest(Long id, String title, String author, String state, String url, Integer number, java.util.Date createdAt, long repositoryId) {
+    public PullRequest(Long id, String title, String author, String state, String url, Integer number, java.util.Date createdAt, java.util.Date closedAt, java.util.Date mergedAt, long repositoryId) {
         this.id = id;
         this.title = title;
         this.author = author;
@@ -59,6 +61,8 @@ public class PullRequest {
         this.url = url;
         this.number = number;
         this.createdAt = createdAt;
+        this.closedAt = closedAt;
+        this.mergedAt = mergedAt;
         this.repositoryId = repositoryId;
     }
 
@@ -122,6 +126,22 @@ public class PullRequest {
 
     public void setCreatedAt(java.util.Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public java.util.Date getClosedAt() {
+        return closedAt;
+    }
+
+    public void setClosedAt(java.util.Date closedAt) {
+        this.closedAt = closedAt;
+    }
+
+    public java.util.Date getMergedAt() {
+        return mergedAt;
+    }
+
+    public void setMergedAt(java.util.Date mergedAt) {
+        this.mergedAt = mergedAt;
     }
 
     public long getRepositoryId() {
@@ -193,6 +213,8 @@ public class PullRequest {
         url = json.getString("html_url");
         state = json.getString("state");
         createdAt = parseDate(json.getString("created_at"));
+        closedAt = parseDate(json.getString("closed_at"));
+        mergedAt = parseDate(json.getString("merged_at"));
     }
 
     private Date parseDate(String string) {
@@ -222,6 +244,14 @@ public class PullRequest {
 
         PullRequest otherPullRequest = (PullRequest)o;
         return number.equals(otherPullRequest.getNumber());
+    }
+
+    public String getCurrentState() {
+        if (mergedAt != null) {
+            return "merged";
+        } else {
+            return state;
+        }
     }
     // KEEP METHODS END
 

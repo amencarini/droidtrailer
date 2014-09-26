@@ -19,6 +19,8 @@ public class MyDaoGenerator {
         pullRequest.addStringProperty("url");
         pullRequest.addIntProperty("number");
         pullRequest.addDateProperty("createdAt");
+        pullRequest.addDateProperty("closedAt");
+        pullRequest.addDateProperty("mergedAt");
 
         pullRequest.setHasKeepSections(true);
 
