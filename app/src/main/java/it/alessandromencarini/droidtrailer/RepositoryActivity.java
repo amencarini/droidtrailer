@@ -1,6 +1,5 @@
 package it.alessandromencarini.droidtrailer;
 
-import android.app.Activity;
 import android.app.ListActivity;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -15,7 +14,6 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 
 public class RepositoryActivity extends ListActivity {
@@ -107,7 +105,7 @@ public class RepositoryActivity extends ListActivity {
             try {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(RepositoryActivity.this);
                 String apiKey = prefs.getString("github_key", "");
-                repositories = new GithubFetcher(apiKey).fetchRepositories();
+                repositories = new GitHubFetcher(apiKey).fetchRepositories();
             } catch (JSONException e) {
                 Log.e(TAG, "JSON problems: ", e);
             }

@@ -19,10 +19,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -153,18 +153,18 @@ public class PullRequestListActivity extends ListActivity {
         Bitmap blankBitmap=((BitmapDrawable)blankDrawable).getBitmap();
 
         long timestamp;
-        long timeadj = 24*60*60*1000;
 
-        if (pullRequest.getCurrentState() == "merged") {
-            timestamp = pullRequest.getMergedAt().getTime() - timeadj;
-        } else if (pullRequest.getCurrentState() == "closed") {
-            timestamp = pullRequest.getClosedAt().getTime() - timeadj - timeadj;
+        if (pullRequest.getCurrentState().equals("merged")) {
+            timestamp = pullRequest.getMergedAt().getTime();
+        } else if (pullRequest.getCurrentState().equals("closed")) {
+            timestamp = pullRequest.getClosedAt().getTime();
         } else {
             timestamp = new Date().getTime();
         }
 
         Notification notification = new Notification.Builder(this)
                 .setWhen(timestamp)
+                .setShowWhen(true)
                 .setTicker("PR " + pullRequest.getCurrentState() + "!")
                 .setContentTitle("PR " + pullRequest.getCurrentState() + "!")
                 .setContentText(pullRequest.getTitle())
@@ -198,9 +198,9 @@ public class PullRequestListActivity extends ListActivity {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
             String apiKey = prefs.getString("github_key", "");
             try {
-                mPullRequest = new GithubFetcher(apiKey).updatePullRequest(mPullRequest);
-            } catch (JSONException e) {
-                Log.e(TAG, "JSON problems: ", e);
+                mPullRequest = new GitHubFetcher(apiKey).updatePullRequest(mPullRequest);
+            } catch (IOException e) {
+                Log.e(TAG, "Connection problems: ", e);
             }
 
             if (mPullRequest.getState().equals(startingState)) {
@@ -230,9 +230,9 @@ public class PullRequestListActivity extends ListActivity {
                 try {
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
                     String apiKey = prefs.getString("github_key", "");
-                    pullRequests.addAll(new GithubFetcher(apiKey).fetchPullRequestsForRepository(repository));
-                } catch (JSONException e) {
-                    Log.e(TAG, "JSON problems: ", e);
+                    pullRequests.addAll(new GitHubFetcher(apiKey).fetchPullRequestsForRepository(repository));
+                } catch (IOException e) {
+                    Log.e(TAG, "Connection problems: ", e);
                 }
             }
 

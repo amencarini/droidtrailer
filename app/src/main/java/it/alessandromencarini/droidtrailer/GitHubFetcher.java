@@ -6,6 +6,10 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,21 +25,63 @@ import java.util.regex.Pattern;
 /**
  * Created by alessandromencarini on 18/09/2014.
  */
-public class GithubFetcher {
+public class GitHubFetcher {
 
+    private GitHub mGitHubClient;
     private String mApiKey;
 
-    private static final String TAG      = "GithubFetcher";
+    private static final String TAG      = "GitHubFetcher";
 
     private static final String ENDPOINT = "https://api.github.com";
     private static final String PART_REPOSITORY = "/repos";
     private static final String PART_SUBSCRIPTIONS = "/user/subscriptions";
     private static final String PART_PULL_REQUESTS = "/pulls";
 
-    public GithubFetcher(String apiKey) {
+    public GitHubFetcher(String apiKey) {
         mApiKey = apiKey;
+        try {
+            mGitHubClient = GitHub.connectUsingOAuth(apiKey);
+        } catch (IOException e) {
+            Log.e(TAG, "Cannot connect: ", e);
+        }
     }
 
+    public ArrayList<PullRequest> fetchPullRequestsForRepository(Repository repository) throws IOException {
+        ArrayList<PullRequest> pullRequests = new ArrayList<PullRequest>();
+
+        GHRepository ghRepository = mGitHubClient.getRepository(repository.getFullName());
+        ArrayList<GHPullRequest> pullRequestList = (ArrayList<GHPullRequest>)ghRepository.getPullRequests(GHIssueState.OPEN);
+
+        for (GHPullRequest ghPullRequest : pullRequestList) {
+            pullRequests.add(new PullRequest(
+                    null,
+                    ghPullRequest.getTitle(),
+                    ghPullRequest.getUser().getLogin(),
+                    ghPullRequest.getState().toString(),
+                    ghPullRequest.getUrl().toString(),
+                    ghPullRequest.getNumber(),
+                    ghPullRequest.getCreatedAt(),
+                    ghPullRequest.getClosedAt(),
+                    ghPullRequest.getMergedAt(),
+                    repository.getId()
+            ));
+        }
+
+        return pullRequests;
+    }
+
+    public PullRequest updatePullRequest(PullRequest pullRequest) throws IOException {
+        GHPullRequest ghPullRequest = mGitHubClient.getRepository(pullRequest.getRepository().getFullName()).getPullRequest(pullRequest.getNumber());
+
+        pullRequest.setClosedAt(ghPullRequest.getClosedAt());
+        pullRequest.setMergedAt(ghPullRequest.getMergedAt());
+        pullRequest.setState(ghPullRequest.getState().toString());
+        pullRequest.setTitle(ghPullRequest.getTitle());
+
+        return pullRequest;
+    }
+
+    // This is to override the lack of Watched wrapper in github-api
     private class Response {
         private String mBody;
         private Map<String, List<String>> mHeaders;
@@ -81,35 +127,6 @@ public class GithubFetcher {
         }
     }
 
-    public ArrayList<PullRequest> fetchPullRequestsForRepository(Repository repository) throws JSONException {
-        ArrayList<PullRequest> pullRequests = new ArrayList<PullRequest>();
-
-        // TODO: Block requests if apikey is not available
-        // TODO: reduce duplication
-        try {
-            String baseUri = ENDPOINT + PART_REPOSITORY + "/" +  repository.getFullName() + PART_PULL_REQUESTS;
-
-            String url = Uri.parse(baseUri).buildUpon()
-                    .appendQueryParameter("access_token", mApiKey)
-                    .build().toString();
-            String result = getUrl(url).getBody();
-
-            JSONArray jsonObjects = new JSONArray(result);
-
-            for (int i = 0; i < jsonObjects.length(); i++) {
-                JSONObject pullRequestJSON = jsonObjects.getJSONObject(i);
-                PullRequest pullRequest = new PullRequest(pullRequestJSON);
-                pullRequest.setRepositoryId(repository.getId());
-                pullRequests.add(pullRequest);
-            }
-
-        } catch (IOException ioe) {
-            Log.e(TAG, "Failed to fetch URL: ", ioe);
-        }
-
-        return pullRequests;
-    }
-
     public ArrayList<Repository> fetchRepositories() throws JSONException {
         ArrayList<Repository> repositories = new ArrayList<Repository>();
 
@@ -150,24 +167,4 @@ public class GithubFetcher {
         return repositories;
     }
 
-    public PullRequest updatePullRequest(PullRequest pullRequest) throws JSONException {
-        String baseUri = ENDPOINT + PART_REPOSITORY + "/" + pullRequest.getRepository().getFullName() + PART_PULL_REQUESTS + "/" + pullRequest.getNumber();
-        String url = Uri.parse(baseUri).buildUpon()
-                .appendQueryParameter("access_token", mApiKey)
-                .build().toString();
-
-        PullRequest updatedPullRequest;
-
-        try {
-            Response response = getUrl(url);
-            JSONObject pullRequestJSON = new JSONObject(response.getBody());
-            updatedPullRequest = new PullRequest(pullRequestJSON);
-            updatedPullRequest.setId(pullRequest.getId());
-            updatedPullRequest.setRepositoryId(pullRequest.getRepositoryId());
-            return updatedPullRequest;
-        } catch (IOException ioe) {
-            Log.e(TAG, "Failed to fetch URL: ", ioe);
-            return pullRequest;
-        }
-    }
 }

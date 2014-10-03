@@ -75,10 +75,6 @@ public class Repository {
         this.remoteId = remoteId;
     }
 
-    public Boolean getSelected() {
-        return selected;
-    }
-
     public void setSelected(Boolean selected) {
         this.selected = selected;
     }
@@ -146,6 +142,14 @@ public class Repository {
 
         Repository otherRepository = (Repository)o;
         return remoteId.equals(otherRepository.getRemoteId());
+    }
+
+    public String getOwner() {
+        return fullName.split("/")[0];
+    }
+
+    public String getName() {
+        return fullName.split("/")[1];
     }
     // KEEP METHODS END
 
