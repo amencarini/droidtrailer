@@ -11,33 +11,49 @@ public class MyDaoGenerator {
     public static void main(String args[]) throws Exception {
         Schema schema = new Schema(1, "it.alessandromencarini.droidtrailer");
 
+        schema.enableKeepSectionsByDefault();
+
         Entity pullRequest = schema.addEntity("PullRequest");
         pullRequest.addIdProperty();
         pullRequest.addStringProperty("title");
-        pullRequest.addStringProperty("author");
+        pullRequest.addStringProperty("userLogin");
         pullRequest.addStringProperty("state");
         pullRequest.addStringProperty("url");
+        pullRequest.addStringProperty("userAvatarUrl");
         pullRequest.addIntProperty("number");
+        pullRequest.addIntProperty("commentCount");
+        pullRequest.addIntProperty("unreadCommentCount");
+        pullRequest.addBooleanProperty("assignedToMe");
+        pullRequest.addBooleanProperty("mergeable");
         pullRequest.addDateProperty("createdAt");
         pullRequest.addDateProperty("closedAt");
         pullRequest.addDateProperty("mergedAt");
-
-        pullRequest.setHasKeepSections(true);
+        pullRequest.addDateProperty("readAt");
 
         Entity repository = schema.addEntity("Repository");
         repository.addIdProperty();
         repository.addStringProperty("fullName");
+        repository.addStringProperty("url");
         repository.addLongProperty("remoteId");
         repository.addBooleanProperty("selected");
+        repository.addDateProperty("readAt");
 
-        repository.setHasKeepSections(true);
+        Entity comment = schema.addEntity("Comment");
+        comment.addIdProperty();
+        comment.addStringProperty("userAvatarUrl");
+        comment.addStringProperty("body");
+        comment.addStringProperty("userLogin");
+        comment.addStringProperty("url");
+        comment.addDateProperty("createdAt");
 
         Property repositoryId = pullRequest.addLongProperty("repositoryId").notNull().getProperty();
-
-        ToMany repositoryToPullRequests = repository.addToMany(pullRequest, repositoryId);
+        repository.addToMany(pullRequest, repositoryId);
         pullRequest.addToOne(repository, repositoryId);
+
+        Property pullRequestId = comment.addLongProperty("pullRequestId").notNull().getProperty();
+        pullRequest.addToMany(comment, pullRequestId );
+        comment.addToOne(pullRequest, pullRequestId );
 
         new DaoGenerator().generateAll(schema, args[0]);
     }
 }
-

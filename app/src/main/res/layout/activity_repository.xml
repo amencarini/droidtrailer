@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/no_repositories"
-        android:id="@+id/textView" />
+        android:id="@+id/list_item_pull_request_unreadCommentsTextView" />
 </LinearLayout>
 
 </FrameLayout>

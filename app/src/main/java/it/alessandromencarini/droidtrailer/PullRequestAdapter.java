@@ -1,6 +1,7 @@
 package it.alessandromencarini.droidtrailer;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,10 +34,16 @@ public class PullRequestAdapter extends ArrayAdapter<PullRequest> {
         titleTextView.setText(pullRequest.getTitle());
 
         TextView authorTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_author);
-        authorTextView.setText(pullRequest.getAuthor());
+        authorTextView.setText(pullRequest.getUserLogin());
 
         TextView stateTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_state);
         stateTextView.setText(pullRequest.getState());
+
+        TextView commentCountTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_commentCountTextView);
+        commentCountTextView .setText(pullRequest.getCommentCount());
+        if (pullRequest.getUnreadCommentCount() > 0) {
+            commentCountTextView.setTextColor(Color.RED);
+        }
 
         return rowView;
     }

@@ -39,4 +39,11 @@ public class PullRequestDatabaseHelper extends DatabaseHelper {
     public void delete(PullRequest pullRequest) {
         mPullRequestDao.delete(pullRequest);
     }
+
+    public ArrayList<PullRequest> getNewPullRequests() {
+        return (ArrayList<PullRequest>)mPullRequestDao
+                .queryBuilder()
+                .where(PullRequestDao.Properties.CommentCount.isNull())
+                .list();
+    }
 }

@@ -24,6 +24,8 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -35,6 +37,7 @@ public class PullRequestListActivity extends ListActivity {
 
     private PullRequestDatabaseHelper mPullRequestHelper;
     private RepositoryDatabaseHelper mRepositoryHelper;
+    private CommentDatabaseHelper mCommentHelper;
 
     // TODO: Transfer view handling to
 
@@ -75,6 +78,7 @@ public class PullRequestListActivity extends ListActivity {
                 PullRequest storedPullRequest = storedPullRequests.get(position);
                 storedPullRequest.setMarkedForDestruction(false);
                 incomingPullRequest.setId(storedPullRequest.getId());
+                incomingPullRequest.setUnreadCommentCount(storedPullRequest.getUnreadCommentCount());
                 mPullRequestHelper.update(incomingPullRequest);
                 storedPullRequests.set(position, incomingPullRequest);
             }
@@ -182,6 +186,43 @@ public class PullRequestListActivity extends ListActivity {
         mPullRequestAdapter.notifyDataSetChanged();
     }
 
+    private void refreshComments() {
+        ArrayList<PullRequest> newPullRequests = mPullRequestHelper.getNewPullRequests();
+        new FetchCommentsTask().execute(newPullRequests);
+    }
+
+    private class FetchCommentsTask extends AsyncTask<ArrayList<PullRequest>, Void, ArrayList<Comment>> {
+        private static final String TAG = "FetchCommentsTask";
+
+        @Override
+        protected ArrayList<Comment> doInBackground(ArrayList<PullRequest>... prs) {
+            ArrayList<Comment> comments = new ArrayList<Comment>();
+
+            ArrayList<PullRequest> newPullRequests = prs[0];
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
+            String apiKey = prefs.getString("github_key", "");
+            try {
+                comments = new GitHubFetcher(apiKey).fetchCommentsForPullRequests(newPullRequests);
+            } catch (IOException e) {
+                Log.e(TAG, "Connection problems: ", e);
+            }
+
+            return comments;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Comment> comments) {
+            mCommentHelper.insert((Comment[])comments.toArray());
+            for (PullRequest pullRequest : mPullRequests) {
+                int commentSize = pullRequest.getCommentList().size();
+                pullRequest.setUnreadCommentCount(commentSize - pullRequest.getCommentCount());
+                pullRequest.setCommentCount(pullRequest.getCommentList().size());
+                pullRequest.setReadAt(new Date());
+                pullRequest.update();
+            }
+        }
+    }
+
     private class UpdatePullRequestTask extends AsyncTask<Void, Void, PullRequest> {
         private static final String TAG = "UpdatePullRequestTask";
         private PullRequest mPullRequest;
@@ -242,6 +283,7 @@ public class PullRequestListActivity extends ListActivity {
         @Override
         protected void onPostExecute(ArrayList<PullRequest> pullRequests) {
             refreshList(pullRequests);
+            refreshComments();
         }
     }
 }

@@ -1,5 +1,6 @@
 package it.alessandromencarini.droidtrailer;
 
+import java.util.List;
 import it.alessandromencarini.droidtrailer.DaoSession;
 import de.greenrobot.dao.DaoException;
 
@@ -20,13 +21,19 @@ public class PullRequest {
 
     private Long id;
     private String title;
-    private String author;
+    private String userLogin;
     private String state;
     private String url;
+    private String userAvatarUrl;
     private Integer number;
+    private Integer commentCount;
+    private Integer unreadCommentCount;
+    private Boolean assignedToMe;
+    private Boolean mergeable;
     private java.util.Date createdAt;
     private java.util.Date closedAt;
     private java.util.Date mergedAt;
+    private java.util.Date readAt;
     private long repositoryId;
 
     /** Used to resolve relations */
@@ -38,6 +45,7 @@ public class PullRequest {
     private Repository repository;
     private Long repository__resolvedKey;
 
+    private List<Comment> commentList;
 
     // KEEP FIELDS - put your custom fields here
 
@@ -53,16 +61,22 @@ public class PullRequest {
         this.id = id;
     }
 
-    public PullRequest(Long id, String title, String author, String state, String url, Integer number, java.util.Date createdAt, java.util.Date closedAt, java.util.Date mergedAt, long repositoryId) {
+    public PullRequest(Long id, String title, String userLogin, String state, String url, String userAvatarUrl, Integer number, Integer commentCount, Integer unreadCommentCount, Boolean assignedToMe, Boolean mergeable, java.util.Date createdAt, java.util.Date closedAt, java.util.Date mergedAt, java.util.Date readAt, long repositoryId) {
         this.id = id;
         this.title = title;
-        this.author = author;
+        this.userLogin = userLogin;
         this.state = state;
         this.url = url;
+        this.userAvatarUrl = userAvatarUrl;
         this.number = number;
+        this.commentCount = commentCount;
+        this.unreadCommentCount = unreadCommentCount;
+        this.assignedToMe = assignedToMe;
+        this.mergeable = mergeable;
         this.createdAt = createdAt;
         this.closedAt = closedAt;
         this.mergedAt = mergedAt;
+        this.readAt = readAt;
         this.repositoryId = repositoryId;
     }
 
@@ -88,12 +102,12 @@ public class PullRequest {
         this.title = title;
     }
 
-    public String getAuthor() {
-        return author;
+    public String getUserLogin() {
+        return userLogin;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setUserLogin(String userLogin) {
+        this.userLogin = userLogin;
     }
 
     public String getState() {
@@ -112,12 +126,52 @@ public class PullRequest {
         this.url = url;
     }
 
+    public String getUserAvatarUrl() {
+        return userAvatarUrl;
+    }
+
+    public void setUserAvatarUrl(String userAvatarUrl) {
+        this.userAvatarUrl = userAvatarUrl;
+    }
+
     public Integer getNumber() {
         return number;
     }
 
     public void setNumber(Integer number) {
         this.number = number;
+    }
+
+    public Integer getCommentCount() {
+        return commentCount;
+    }
+
+    public void setCommentCount(Integer commentCount) {
+        this.commentCount = commentCount;
+    }
+
+    public Integer getUnreadCommentCount() {
+        return unreadCommentCount;
+    }
+
+    public void setUnreadCommentCount(Integer unreadCommentCount) {
+        this.unreadCommentCount = unreadCommentCount;
+    }
+
+    public Boolean getAssignedToMe() {
+        return assignedToMe;
+    }
+
+    public void setAssignedToMe(Boolean assignedToMe) {
+        this.assignedToMe = assignedToMe;
+    }
+
+    public Boolean getMergeable() {
+        return mergeable;
+    }
+
+    public void setMergeable(Boolean mergeable) {
+        this.mergeable = mergeable;
     }
 
     public java.util.Date getCreatedAt() {
@@ -142,6 +196,14 @@ public class PullRequest {
 
     public void setMergedAt(java.util.Date mergedAt) {
         this.mergedAt = mergedAt;
+    }
+
+    public java.util.Date getReadAt() {
+        return readAt;
+    }
+
+    public void setReadAt(java.util.Date readAt) {
+        this.readAt = readAt;
     }
 
     public long getRepositoryId() {
@@ -180,6 +242,28 @@ public class PullRequest {
         }
     }
 
+    /** To-many relationship, resolved on first access (and after reset). Changes to to-many relations are not persisted, make changes to the target entity. */
+    public List<Comment> getCommentList() {
+        if (commentList == null) {
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            CommentDao targetDao = daoSession.getCommentDao();
+            List<Comment> commentListNew = targetDao._queryPullRequest_CommentList(id);
+            synchronized (this) {
+                if(commentList == null) {
+                    commentList = commentListNew;
+                }
+            }
+        }
+        return commentList;
+    }
+
+    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
+    public synchronized void resetCommentList() {
+        commentList = null;
+    }
+
     /** Convenient call for {@link AbstractDao#delete(Object)}. Entity must attached to an entity context. */
     public void delete() {
         if (myDao == null) {
@@ -209,7 +293,7 @@ public class PullRequest {
     public PullRequest(JSONObject json) throws JSONException {
         number = json.getInt("number");
         title = json.getString("title");
-        author = json.getJSONObject("user").getString("login");
+        userLogin = json.getJSONObject("user").getString("login");
         url = json.getString("html_url");
         state = json.getString("state");
         createdAt = parseDate(json.getString("created_at"));

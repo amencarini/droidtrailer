@@ -30,14 +30,20 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
     public static class Properties {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
         public final static Property Title = new Property(1, String.class, "title", false, "TITLE");
-        public final static Property Author = new Property(2, String.class, "author", false, "AUTHOR");
+        public final static Property UserLogin = new Property(2, String.class, "userLogin", false, "USER_LOGIN");
         public final static Property State = new Property(3, String.class, "state", false, "STATE");
         public final static Property Url = new Property(4, String.class, "url", false, "URL");
-        public final static Property Number = new Property(5, Integer.class, "number", false, "NUMBER");
-        public final static Property CreatedAt = new Property(6, java.util.Date.class, "createdAt", false, "CREATED_AT");
-        public final static Property ClosedAt = new Property(7, java.util.Date.class, "closedAt", false, "CLOSED_AT");
-        public final static Property MergedAt = new Property(8, java.util.Date.class, "mergedAt", false, "MERGED_AT");
-        public final static Property RepositoryId = new Property(9, long.class, "repositoryId", false, "REPOSITORY_ID");
+        public final static Property UserAvatarUrl = new Property(5, String.class, "userAvatarUrl", false, "USER_AVATAR_URL");
+        public final static Property Number = new Property(6, Integer.class, "number", false, "NUMBER");
+        public final static Property CommentCount = new Property(7, Integer.class, "commentCount", false, "COMMENT_COUNT");
+        public final static Property UnreadCommentCount = new Property(8, Integer.class, "unreadCommentCount", false, "UNREAD_COMMENT_COUNT");
+        public final static Property AssignedToMe = new Property(9, Boolean.class, "assignedToMe", false, "ASSIGNED_TO_ME");
+        public final static Property Mergeable = new Property(10, Boolean.class, "mergeable", false, "MERGEABLE");
+        public final static Property CreatedAt = new Property(11, java.util.Date.class, "createdAt", false, "CREATED_AT");
+        public final static Property ClosedAt = new Property(12, java.util.Date.class, "closedAt", false, "CLOSED_AT");
+        public final static Property MergedAt = new Property(13, java.util.Date.class, "mergedAt", false, "MERGED_AT");
+        public final static Property ReadAt = new Property(14, java.util.Date.class, "readAt", false, "READ_AT");
+        public final static Property RepositoryId = new Property(15, long.class, "repositoryId", false, "REPOSITORY_ID");
     };
 
     private DaoSession daoSession;
@@ -59,14 +65,20 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         db.execSQL("CREATE TABLE " + constraint + "'PULL_REQUEST' (" + //
                 "'_id' INTEGER PRIMARY KEY ," + // 0: id
                 "'TITLE' TEXT," + // 1: title
-                "'AUTHOR' TEXT," + // 2: author
+                "'USER_LOGIN' TEXT," + // 2: userLogin
                 "'STATE' TEXT," + // 3: state
                 "'URL' TEXT," + // 4: url
-                "'NUMBER' INTEGER," + // 5: number
-                "'CREATED_AT' INTEGER," + // 6: createdAt
-                "'CLOSED_AT' INTEGER," + // 7: closedAt
-                "'MERGED_AT' INTEGER," + // 8: mergedAt
-                "'REPOSITORY_ID' INTEGER NOT NULL );"); // 9: repositoryId
+                "'USER_AVATAR_URL' TEXT," + // 5: userAvatarUrl
+                "'NUMBER' INTEGER," + // 6: number
+                "'COMMENT_COUNT' INTEGER," + // 7: commentCount
+                "'UNREAD_COMMENT_COUNT' INTEGER," + // 8: unreadCommentCount
+                "'ASSIGNED_TO_ME' INTEGER," + // 9: assignedToMe
+                "'MERGEABLE' INTEGER," + // 10: mergeable
+                "'CREATED_AT' INTEGER," + // 11: createdAt
+                "'CLOSED_AT' INTEGER," + // 12: closedAt
+                "'MERGED_AT' INTEGER," + // 13: mergedAt
+                "'READ_AT' INTEGER," + // 14: readAt
+                "'REPOSITORY_ID' INTEGER NOT NULL );"); // 15: repositoryId
     }
 
     /** Drops the underlying database table. */
@@ -90,9 +102,9 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
             stmt.bindString(2, title);
         }
  
-        String author = entity.getAuthor();
-        if (author != null) {
-            stmt.bindString(3, author);
+        String userLogin = entity.getUserLogin();
+        if (userLogin != null) {
+            stmt.bindString(3, userLogin);
         }
  
         String state = entity.getState();
@@ -105,26 +117,56 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
             stmt.bindString(5, url);
         }
  
+        String userAvatarUrl = entity.getUserAvatarUrl();
+        if (userAvatarUrl != null) {
+            stmt.bindString(6, userAvatarUrl);
+        }
+ 
         Integer number = entity.getNumber();
         if (number != null) {
-            stmt.bindLong(6, number);
+            stmt.bindLong(7, number);
+        }
+ 
+        Integer commentCount = entity.getCommentCount();
+        if (commentCount != null) {
+            stmt.bindLong(8, commentCount);
+        }
+ 
+        Integer unreadCommentCount = entity.getUnreadCommentCount();
+        if (unreadCommentCount != null) {
+            stmt.bindLong(9, unreadCommentCount);
+        }
+ 
+        Boolean assignedToMe = entity.getAssignedToMe();
+        if (assignedToMe != null) {
+            stmt.bindLong(10, assignedToMe ? 1l: 0l);
+        }
+ 
+        Boolean mergeable = entity.getMergeable();
+        if (mergeable != null) {
+            stmt.bindLong(11, mergeable ? 1l: 0l);
         }
  
         java.util.Date createdAt = entity.getCreatedAt();
         if (createdAt != null) {
-            stmt.bindLong(7, createdAt.getTime());
+            stmt.bindLong(12, createdAt.getTime());
         }
  
         java.util.Date closedAt = entity.getClosedAt();
         if (closedAt != null) {
-            stmt.bindLong(8, closedAt.getTime());
+            stmt.bindLong(13, closedAt.getTime());
         }
  
         java.util.Date mergedAt = entity.getMergedAt();
         if (mergedAt != null) {
-            stmt.bindLong(9, mergedAt.getTime());
+            stmt.bindLong(14, mergedAt.getTime());
         }
-        stmt.bindLong(10, entity.getRepositoryId());
+ 
+        java.util.Date readAt = entity.getReadAt();
+        if (readAt != null) {
+            stmt.bindLong(15, readAt.getTime());
+        }
+        stmt.bindLong(16, entity.getRepositoryId());
     }
 
     @Override
@@ -145,14 +187,20 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         PullRequest entity = new PullRequest( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // title
-            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // author
+            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // userLogin
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // state
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // url
-            cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // number
-            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // createdAt
-            cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // closedAt
-            cursor.isNull(offset + 8) ? null : new java.util.Date(cursor.getLong(offset + 8)), // mergedAt
-            cursor.getLong(offset + 9) // repositoryId
+            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // userAvatarUrl
+            cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // number
+            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // commentCount
+            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8), // unreadCommentCount
+            cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0, // assignedToMe
+            cursor.isNull(offset + 10) ? null : cursor.getShort(offset + 10) != 0, // mergeable
+            cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)), // createdAt
+            cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)), // closedAt
+            cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)), // mergedAt
+            cursor.isNull(offset + 14) ? null : new java.util.Date(cursor.getLong(offset + 14)), // readAt
+            cursor.getLong(offset + 15) // repositoryId
         );
         return entity;
     }
@@ -162,14 +210,20 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
     public void readEntity(Cursor cursor, PullRequest entity, int offset) {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setTitle(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
-        entity.setAuthor(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
+        entity.setUserLogin(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setState(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
         entity.setUrl(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
-        entity.setNumber(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
-        entity.setCreatedAt(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
-        entity.setClosedAt(cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)));
-        entity.setMergedAt(cursor.isNull(offset + 8) ? null : new java.util.Date(cursor.getLong(offset + 8)));
-        entity.setRepositoryId(cursor.getLong(offset + 9));
+        entity.setUserAvatarUrl(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setNumber(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
+        entity.setCommentCount(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
+        entity.setUnreadCommentCount(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
+        entity.setAssignedToMe(cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0);
+        entity.setMergeable(cursor.isNull(offset + 10) ? null : cursor.getShort(offset + 10) != 0);
+        entity.setCreatedAt(cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)));
+        entity.setClosedAt(cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)));
+        entity.setMergedAt(cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)));
+        entity.setReadAt(cursor.isNull(offset + 14) ? null : new java.util.Date(cursor.getLong(offset + 14)));
+        entity.setRepositoryId(cursor.getLong(offset + 15));
      }
     
     /** @inheritdoc */

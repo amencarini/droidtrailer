@@ -6,6 +6,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
@@ -14,6 +15,7 @@ import org.kohsuke.github.GitHub;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -59,10 +61,16 @@ public class GitHubFetcher {
                     ghPullRequest.getUser().getLogin(),
                     ghPullRequest.getState().toString(),
                     ghPullRequest.getUrl().toString(),
+                    ghPullRequest.getUser().getAvatarUrl(),
                     ghPullRequest.getNumber(),
+                    ghPullRequest.getCommentsCount(),
+                    null,
+                    null,
+                    null,
                     ghPullRequest.getCreatedAt(),
                     ghPullRequest.getClosedAt(),
                     ghPullRequest.getMergedAt(),
+                    null,
                     repository.getId()
             ));
         }
@@ -79,6 +87,30 @@ public class GitHubFetcher {
         pullRequest.setTitle(ghPullRequest.getTitle());
 
         return pullRequest;
+    }
+
+    public ArrayList<Comment> fetchCommentsForPullRequests(ArrayList<PullRequest> pullRequests) throws IOException {
+        ArrayList<Comment> allComments = new ArrayList<Comment>();
+
+        for (PullRequest pullRequest : pullRequests) {
+            GHPullRequest ghPullRequest = mGitHubClient.getRepository(pullRequest.getRepository().getFullName()).getPullRequest(pullRequest.getNumber());
+            List<GHIssueComment> ghComments = ghPullRequest.getComments();
+            for (GHIssueComment ghComment : ghComments) {
+                Comment comment = new Comment(
+                        null,
+                        ghComment.getUser().getAvatarUrl(),
+                        ghComment.getBody(),
+                        ghComment.getUser().getLogin(),
+                        ghComment.getUrl().toString(),
+                        ghComment.getCreatedAt(),
+                        pullRequest.getId()
+                );
+
+                allComments.add(comment);
+            }
+        }
+
+        return allComments;
     }
 
     // This is to override the lack of Watched wrapper in github-api

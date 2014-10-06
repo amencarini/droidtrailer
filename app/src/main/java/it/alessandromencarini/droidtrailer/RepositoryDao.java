@@ -25,8 +25,9 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
     public static class Properties {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
         public final static Property FullName = new Property(1, String.class, "fullName", false, "FULL_NAME");
-        public final static Property RemoteId = new Property(2, Long.class, "remoteId", false, "REMOTE_ID");
-        public final static Property Selected = new Property(3, Boolean.class, "selected", false, "SELECTED");
+        public final static Property Url = new Property(2, String.class, "url", false, "URL");
+        public final static Property RemoteId = new Property(3, Long.class, "remoteId", false, "REMOTE_ID");
+        public final static Property Selected = new Property(4, Boolean.class, "selected", false, "SELECTED");
     };
 
     private DaoSession daoSession;
@@ -47,8 +48,9 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
         db.execSQL("CREATE TABLE " + constraint + "'REPOSITORY' (" + //
                 "'_id' INTEGER PRIMARY KEY ," + // 0: id
                 "'FULL_NAME' TEXT," + // 1: fullName
-                "'REMOTE_ID' INTEGER," + // 2: remoteId
-                "'SELECTED' INTEGER);"); // 3: selected
+                "'URL' TEXT," + // 2: url
+                "'REMOTE_ID' INTEGER," + // 3: remoteId
+                "'SELECTED' INTEGER);"); // 4: selected
     }
 
     /** Drops the underlying database table. */
@@ -72,14 +74,19 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
             stmt.bindString(2, fullName);
         }
  
+        String url = entity.getUrl();
+        if (url != null) {
+            stmt.bindString(3, url);
+        }
+ 
         Long remoteId = entity.getRemoteId();
         if (remoteId != null) {
-            stmt.bindLong(3, remoteId);
+            stmt.bindLong(4, remoteId);
         }
  
         Boolean selected = entity.getSelected();
         if (selected != null) {
-            stmt.bindLong(4, selected ? 1l: 0l);
+            stmt.bindLong(5, selected ? 1l: 0l);
         }
     }
 
@@ -101,8 +108,9 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
         Repository entity = new Repository( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // fullName
-            cursor.isNull(offset + 2) ? null : cursor.getLong(offset + 2), // remoteId
-            cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0 // selected
+            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // url
+            cursor.isNull(offset + 3) ? null : cursor.getLong(offset + 3), // remoteId
+            cursor.isNull(offset + 4) ? null : cursor.getShort(offset + 4) != 0 // selected
         );
         return entity;
     }
@@ -112,8 +120,9 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
     public void readEntity(Cursor cursor, Repository entity, int offset) {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setFullName(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
-        entity.setRemoteId(cursor.isNull(offset + 2) ? null : cursor.getLong(offset + 2));
-        entity.setSelected(cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0);
+        entity.setUrl(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
+        entity.setRemoteId(cursor.isNull(offset + 3) ? null : cursor.getLong(offset + 3));
+        entity.setSelected(cursor.isNull(offset + 4) ? null : cursor.getShort(offset + 4) != 0);
      }
     
     /** @inheritdoc */

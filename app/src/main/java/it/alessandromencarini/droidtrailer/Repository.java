@@ -17,6 +17,7 @@ public class Repository {
 
     private Long id;
     private String fullName;
+    private String url;
     private Long remoteId;
     private Boolean selected;
 
@@ -38,9 +39,10 @@ public class Repository {
         this.id = id;
     }
 
-    public Repository(Long id, String fullName, Long remoteId, Boolean selected) {
+    public Repository(Long id, String fullName, String url, Long remoteId, Boolean selected) {
         this.id = id;
         this.fullName = fullName;
+        this.url = url;
         this.remoteId = remoteId;
         this.selected = selected;
     }
@@ -65,6 +67,14 @@ public class Repository {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public Long getRemoteId() {
