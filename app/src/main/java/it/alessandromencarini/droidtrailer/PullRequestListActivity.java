@@ -4,6 +4,7 @@ import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -39,6 +40,8 @@ public class PullRequestListActivity extends ListActivity {
     private RepositoryDatabaseHelper mRepositoryHelper;
     private CommentDatabaseHelper mCommentHelper;
 
+    protected ProgressDialog mDialog;
+
     // TODO: Transfer view handling to
 
     @Override
@@ -53,14 +56,31 @@ public class PullRequestListActivity extends ListActivity {
 
         mPullRequestAdapter = new PullRequestAdapter(this, mPullRequests);
 
+        mCommentHelper = new CommentDatabaseHelper(this);
+
         setListAdapter(mPullRequestAdapter);
 
         setTitle("All PRs");
 
+        refreshList();
+
+        mDialog = new ProgressDialog(this);
     }
 
-    private void refreshList(ArrayList<PullRequest> incomingPullRequests) {
+    private void refreshList() {
         // Get PRs that are already stored
+        List<PullRequest> storedPullRequests = mPullRequestHelper.getAllPullRequests();
+
+        mPullRequests.clear();
+
+        for (PullRequest pullRequest : storedPullRequests) {
+            mPullRequests.add(pullRequest);
+        }
+
+        mPullRequestAdapter.notifyDataSetChanged();
+    }
+
+    private void storePullRequests(ArrayList<PullRequest> incomingPullRequests) {
         List<PullRequest> storedPullRequests = mPullRequestHelper.getAllPullRequests();
 
         // Mark for destruction, we'll preserve the ones that are still reported
@@ -90,13 +110,7 @@ public class PullRequestListActivity extends ListActivity {
             }
         }
 
-        mPullRequests.clear();
-
-        for (PullRequest pullRequest : storedPullRequests) {
-            mPullRequests.add(pullRequest);
-        }
-
-        mPullRequestAdapter.notifyDataSetChanged();
+        refreshList();
     }
 
     @Override
@@ -132,9 +146,7 @@ public class PullRequestListActivity extends ListActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_REPOSITORY_ACTIVITY:
-                mPullRequests.clear();
-                mPullRequests = mPullRequestHelper.getAllPullRequests();
-                mPullRequestAdapter.notifyDataSetChanged();
+                refreshList();
         }
 
     }
@@ -142,6 +154,9 @@ public class PullRequestListActivity extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         PullRequest pullRequest = mPullRequests.get(position);
+        pullRequest.setUnreadCommentCount(0);
+        pullRequest.update();
+        refreshList();
 
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(pullRequest.getUrl()));
         startActivity(browserIntent);
@@ -212,7 +227,10 @@ public class PullRequestListActivity extends ListActivity {
 
         @Override
         protected void onPostExecute(ArrayList<Comment> comments) {
-            mCommentHelper.insert((Comment[])comments.toArray());
+            for (Comment comment : comments) {
+                mCommentHelper.insert(comment);
+            }
+
             for (PullRequest pullRequest : mPullRequests) {
                 int commentSize = pullRequest.getCommentList().size();
                 pullRequest.setUnreadCommentCount(commentSize - pullRequest.getCommentCount());
@@ -220,6 +238,8 @@ public class PullRequestListActivity extends ListActivity {
                 pullRequest.setReadAt(new Date());
                 pullRequest.update();
             }
+
+            mDialog.dismiss();
         }
     }
 
@@ -262,6 +282,12 @@ public class PullRequestListActivity extends ListActivity {
         private static final String TAG = "FetchPullRequestsTask";
 
         @Override
+        protected void onPreExecute() {
+            mDialog.setMessage("Loading...");
+            mDialog.show();
+        }
+
+        @Override
         protected ArrayList<PullRequest> doInBackground(Void... params) {
             ArrayList<PullRequest> pullRequests = new ArrayList<PullRequest>();
 
@@ -282,7 +308,7 @@ public class PullRequestListActivity extends ListActivity {
 
         @Override
         protected void onPostExecute(ArrayList<PullRequest> pullRequests) {
-            refreshList(pullRequests);
+            storePullRequests(pullRequests);
             refreshComments();
         }
     }

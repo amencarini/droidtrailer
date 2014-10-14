@@ -1,6 +1,7 @@
 package it.alessandromencarini.droidtrailer;
 
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -8,6 +9,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ListView;
 
 import org.json.JSONException;
 
@@ -83,6 +86,14 @@ public class RepositoryActivity extends ListActivity {
         mRepositoryAdapter.notifyDataSetChanged();
     }
 
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        Repository repository = mRepositories.get(position);
+        repository.setSelected(!repository.getSelected());
+        updateRepository(repository);
+        mRepositoryAdapter.notifyDataSetChanged();
+    }
+
     private class SortRepositoriesByFullName implements Comparator<Repository> {
         @Override
         public int compare(Repository repository, Repository repository2) {
@@ -99,6 +110,14 @@ public class RepositoryActivity extends ListActivity {
     private class FetchRepositoriesTask extends AsyncTask<Void, Void, ArrayList<Repository>> {
         private static final String TAG = "FetchRepositoriesTask";
 
+        private ProgressDialog mDialog = new ProgressDialog(RepositoryActivity.this);
+
+        @Override
+        protected void onPreExecute() {
+            mDialog.setMessage("Loading...");
+            mDialog.show();
+        }
+
         @Override
         protected ArrayList<Repository> doInBackground(Void... params) {
             ArrayList<Repository> repositories = new ArrayList<Repository>();
@@ -114,6 +133,7 @@ public class RepositoryActivity extends ListActivity {
 
         @Override
         protected void onPostExecute(ArrayList<Repository> repositories) {
+            mDialog.dismiss();
             refreshList(repositories);
         }
     }

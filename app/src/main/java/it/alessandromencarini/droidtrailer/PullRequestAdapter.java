@@ -6,7 +6,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -34,16 +37,27 @@ public class PullRequestAdapter extends ArrayAdapter<PullRequest> {
         titleTextView.setText(pullRequest.getTitle());
 
         TextView authorTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_author);
-        authorTextView.setText(pullRequest.getUserLogin());
+        authorTextView.setText("@" + pullRequest.getUserLogin());
 
-        TextView stateTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_state);
-        stateTextView.setText(pullRequest.getState());
+        TextView repositoryTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_repository);
+        repositoryTextView.setText(pullRequest.getRepository().getFullName());
+
+        TextView createdAtTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_createdAt);
+        createdAtTextView.setText(pullRequest.getCreatedAt().toString());
 
         TextView commentCountTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_commentCountTextView);
-        commentCountTextView .setText(pullRequest.getCommentCount());
+        commentCountTextView.setText(pullRequest.getCommentCount().toString());
+
+        TextView unreadCommentCountTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_unreadCommentCountTextView);
         if (pullRequest.getUnreadCommentCount() > 0) {
-            commentCountTextView.setTextColor(Color.RED);
+            unreadCommentCountTextView.setText(pullRequest.getUnreadCommentCount().toString());
+            unreadCommentCountTextView.setVisibility(View.VISIBLE);
+        } else {
+            unreadCommentCountTextView.setVisibility(View.INVISIBLE);
         }
+
+        ImageView userAvatarImageView = (ImageView)rowView.findViewById(R.id.list_item_pull_request_userAvatarImageView);
+        userAvatarImageView.setImageResource(R.drawable.octocat);
 
         return rowView;
     }

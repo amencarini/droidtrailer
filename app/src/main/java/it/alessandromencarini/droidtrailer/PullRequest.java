@@ -150,10 +150,6 @@ public class PullRequest {
         this.commentCount = commentCount;
     }
 
-    public Integer getUnreadCommentCount() {
-        return unreadCommentCount;
-    }
-
     public void setUnreadCommentCount(Integer unreadCommentCount) {
         this.unreadCommentCount = unreadCommentCount;
     }
@@ -311,6 +307,13 @@ public class PullRequest {
             Log.e("PullRequest", "Could not parse date: ", e);
             return null;
         }
+    }
+
+    public Integer getUnreadCommentCount() {
+        if (unreadCommentCount != null)
+            return unreadCommentCount;
+        else
+            return 0;
     }
 
     public Boolean getMarkedForDestruction() {

@@ -1,43 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content" android:layout_height="wrap_content"
+<LinearLayout android:orientation="vertical" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent" android:layout_height="wrap_content" android:padding="8dp"
     >
 
     <TextView
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:text="12"
-        android:id="@+id/list_item_pull_request_unreadCommentsTextView"
-        android:gravity="center"/>
-
-    <LinearLayout
-        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/list_item_pull_request_commentCountTextView">
+        android:text="Title"
+        android:id="@+id/list_item_pull_request_title"
+        android:textSize="16dp"
+        android:singleLine="true" />
+
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="48dp"
+        android:layout_toRightOf="@+id/list_item_pull_request_commentCountTextView"
+
+        >
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:id="@+id/list_item_pull_request_userAvatarImageView" />
+
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text="12"
+            android:id="@+id/list_item_pull_request_commentCountTextView"
+            android:gravity="center"
+            android:padding="8dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Title"
-            android:id="@+id/list_item_pull_request_title" />
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="3"
+            android:id="@+id/list_item_pull_request_unreadCommentCountTextView"
+            android:layout_alignParentStart="false"
+            android:background="@android:color/holo_red_light"
+            android:textColor="@android:color/white"
+            android:textSize="10dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:padding="2dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="\@author"
-            android:id="@+id/list_item_pull_request_author"
-            android:layout_below="@+id/list_item_pull_request_title" />
+            android:layout_toEndOf="@+id/list_item_pull_request_commentCountTextView"
+            android:id="@+id/linearLayout"
+            android:layout_marginLeft="8dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="State"
-            android:id="@+id/list_item_pull_request_state"
-            android:layout_below="@+id/list_item_pull_request_author"
-            android:layout_alignParentStart="true" />
-    </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="amencarini/droidtrailer"
+                android:id="@+id/list_item_pull_request_repository"
+                android:layout_alignParentTop="true"
+                android:layout_toEndOf="@+id/list_item_pull_request_commentCountTextView"
+                android:textSize="12dp" />
 
-</RelativeLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\@author"
+                android:id="@+id/list_item_pull_request_author"
+                android:textSize="12dp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_toEndOf="@+id/list_item_pull_request_commentCountTextView"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Oct 14, 2014, 10:24 PM "
+                android:id="@+id/list_item_pull_request_createdAt"
+                android:layout_toEndOf="@+id/list_item_pull_request_commentCountTextView"
+                android:layout_below="@+id/list_item_pull_request_commentCountTextView"
+                android:layout_alignEnd="@+id/list_item_pull_request_author"
+                android:textSize="12dp" />
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</LinearLayout>

@@ -43,7 +43,7 @@ public class PullRequestDatabaseHelper extends DatabaseHelper {
     public ArrayList<PullRequest> getNewPullRequests() {
         return (ArrayList<PullRequest>)mPullRequestDao
                 .queryBuilder()
-                .where(PullRequestDao.Properties.CommentCount.isNull())
+                .where(PullRequestDao.Properties.ReadAt.isNull())
                 .list();
     }
 }
