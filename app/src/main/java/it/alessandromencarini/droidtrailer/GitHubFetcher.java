@@ -3,19 +3,18 @@ package it.alessandromencarini.droidtrailer;
 import android.net.Uri;
 import android.util.Log;
 
+import org.eclipse.egit.github.core.RepositoryId;
+import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.IssueService;
+import org.eclipse.egit.github.core.service.PullRequestService;
+import org.eclipse.egit.github.core.service.RepositoryService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.kohsuke.github.GHIssueComment;
-import org.kohsuke.github.GHIssueState;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,49 +28,53 @@ import java.util.regex.Pattern;
  */
 public class GitHubFetcher {
 
-    private GitHub mGitHubClient;
     private String mApiKey;
+
+    private GitHubClient mGitHubClient = new GitHubClient();
+    private PullRequestService mPullRequestService;
+    private IssueService mIssueService;
+    private RepositoryService mRepositoryService;
 
     private static final String TAG      = "GitHubFetcher";
 
     private static final String ENDPOINT = "https://api.github.com";
-    private static final String PART_REPOSITORY = "/repos";
     private static final String PART_SUBSCRIPTIONS = "/user/subscriptions";
-    private static final String PART_PULL_REQUESTS = "/pulls";
 
     public GitHubFetcher(String apiKey) {
         mApiKey = apiKey;
-        try {
-            mGitHubClient = GitHub.connectUsingOAuth(apiKey);
-        } catch (IOException e) {
-            Log.e(TAG, "Cannot connect: ", e);
-        }
+        mGitHubClient.setOAuth2Token(apiKey);
+
+        mPullRequestService= new PullRequestService(mGitHubClient);
+        mIssueService = new IssueService(mGitHubClient);
+        mRepositoryService = new RepositoryService(mGitHubClient);
     }
 
     public ArrayList<PullRequest> fetchPullRequestsForRepository(Repository repository) throws IOException {
         ArrayList<PullRequest> pullRequests = new ArrayList<PullRequest>();
 
-        GHRepository ghRepository = mGitHubClient.getRepository(repository.getFullName());
-        ArrayList<GHPullRequest> pullRequestList = (ArrayList<GHPullRequest>)ghRepository.getPullRequests(GHIssueState.OPEN);
+        org.eclipse.egit.github.core.Repository remoteRepository = mRepositoryService.getRepository(repository.getOwner(), repository.getName());
 
-        for (GHPullRequest ghPullRequest : pullRequestList) {
+
+        ArrayList<org.eclipse.egit.github.core.PullRequest> pullRequestList = (ArrayList<org.eclipse.egit.github.core.PullRequest>)mPullRequestService.getPullRequests(remoteRepository, "open");
+
+        for (org.eclipse.egit.github.core.PullRequest remotePullRequest : pullRequestList) {
             pullRequests.add(new PullRequest(
+                    remotePullRequest.getId(),
+                    remotePullRequest.getTitle(),
+                    remotePullRequest.getUser().getLogin(),
+                    remotePullRequest.getState(),
+                    remotePullRequest.getHtmlUrl(),
+                    remotePullRequest.getUser().getAvatarUrl(),
+                    remotePullRequest.getNumber(),
+                    remotePullRequest.getComments(),
                     null,
-                    ghPullRequest.getTitle(),
-                    ghPullRequest.getUser().getLogin(),
-                    ghPullRequest.getState().toString(),
-                    ghPullRequest.getUrl().toString(),
-                    ghPullRequest.getUser().getAvatarUrl(),
-                    ghPullRequest.getNumber(),
-                    ghPullRequest.getCommentsCount(),
+                    null, // TODO: add check for current API user
+                    remotePullRequest.isMergeable(),
+                    remotePullRequest.getCreatedAt(),
+                    remotePullRequest.getClosedAt(),
+                    remotePullRequest.getMergedAt(),
                     null,
-                    null,
-                    null,
-                    ghPullRequest.getCreatedAt(),
-                    ghPullRequest.getClosedAt(),
-                    ghPullRequest.getMergedAt(),
-                    null,
-                    repository.getId()
+                    remoteRepository.getId()
             ));
         }
 
@@ -79,12 +82,15 @@ public class GitHubFetcher {
     }
 
     public PullRequest updatePullRequest(PullRequest pullRequest) throws IOException {
-        GHPullRequest ghPullRequest = mGitHubClient.getRepository(pullRequest.getRepository().getFullName()).getPullRequest(pullRequest.getNumber());
+        Repository localRepository = pullRequest.getRepository();
+        org.eclipse.egit.github.core.Repository remoteRepository = mRepositoryService.getRepository(localRepository.getOwner(), localRepository.getName());
 
-        pullRequest.setClosedAt(ghPullRequest.getClosedAt());
-        pullRequest.setMergedAt(ghPullRequest.getMergedAt());
-        pullRequest.setState(ghPullRequest.getState().toString());
-        pullRequest.setTitle(ghPullRequest.getTitle());
+        org.eclipse.egit.github.core.PullRequest remotePullRequest = mPullRequestService.getPullRequest(remoteRepository, pullRequest.getNumber());
+
+        pullRequest.setClosedAt(remotePullRequest.getClosedAt());
+        pullRequest.setMergedAt(remotePullRequest.getMergedAt());
+        pullRequest.setState(remotePullRequest.getState());
+        pullRequest.setTitle(remotePullRequest.getTitle());
 
         return pullRequest;
     }
@@ -93,16 +99,20 @@ public class GitHubFetcher {
         ArrayList<Comment> allComments = new ArrayList<Comment>();
 
         for (PullRequest pullRequest : pullRequests) {
-            GHPullRequest ghPullRequest = mGitHubClient.getRepository(pullRequest.getRepository().getFullName()).getPullRequest(pullRequest.getNumber());
-            List<GHIssueComment> ghComments = ghPullRequest.getComments();
-            for (GHIssueComment ghComment : ghComments) {
+            Repository localRepository = pullRequest.getRepository();
+            RepositoryId repo = new RepositoryId(localRepository.getOwner(), localRepository.getName());
+
+            List<org.eclipse.egit.github.core.Comment> remoteGeneralComments = mIssueService.getComments(repo, pullRequest.getNumber());
+            remoteGeneralComments.addAll(mPullRequestService.getComments(repo, pullRequest.getNumber()));
+
+            for (org.eclipse.egit.github.core.Comment remoteComment : remoteGeneralComments) {
                 Comment comment = new Comment(
-                        null,
-                        ghComment.getUser().getAvatarUrl(),
-                        ghComment.getBody(),
-                        ghComment.getUser().getLogin(),
-                        ghComment.getUrl().toString(),
-                        ghComment.getCreatedAt(),
+                        remoteComment.getId(),
+                        remoteComment.getUser().getAvatarUrl(),
+                        remoteComment.getBody(),
+                        remoteComment.getUser().getLogin(),
+                        remoteComment.getUrl(),
+                        remoteComment.getCreatedAt(),
                         pullRequest.getId()
                 );
 

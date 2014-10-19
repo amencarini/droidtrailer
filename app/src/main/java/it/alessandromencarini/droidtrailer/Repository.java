@@ -138,7 +138,7 @@ public class Repository {
     // KEEP METHODS - put your custom methods here
     public Repository(JSONObject json) throws JSONException {
         fullName = json.getString("full_name");
-        remoteId = json.getLong("id");
+        id = json.getLong("id");
     }
 
     public Boolean getSelected() {
@@ -151,7 +151,7 @@ public class Repository {
             return false;
 
         Repository otherRepository = (Repository)o;
-        return remoteId.equals(otherRepository.getRemoteId());
+        return id.equals(otherRepository.getId());
     }
 
     public String getOwner() {

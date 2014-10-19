@@ -4,7 +4,6 @@ import de.greenrobot.daogenerator.DaoGenerator;
 import de.greenrobot.daogenerator.Entity;
 import de.greenrobot.daogenerator.Property;
 import de.greenrobot.daogenerator.Schema;
-import de.greenrobot.daogenerator.ToMany;
 
 public class MyDaoGenerator {
 
@@ -26,9 +25,13 @@ public class MyDaoGenerator {
         pullRequest.addBooleanProperty("assignedToMe");
         pullRequest.addBooleanProperty("mergeable");
         pullRequest.addDateProperty("createdAt");
+        pullRequest.addDateProperty("updatedAt");
         pullRequest.addDateProperty("closedAt");
         pullRequest.addDateProperty("mergedAt");
         pullRequest.addDateProperty("readAt");
+        pullRequest.addBooleanProperty("participated");
+        pullRequest.addLongProperty("remoteId");
+        // TODO: Add statuses
 
         Entity repository = schema.addEntity("Repository");
         repository.addIdProperty();
@@ -45,6 +48,7 @@ public class MyDaoGenerator {
         comment.addStringProperty("userLogin");
         comment.addStringProperty("url");
         comment.addDateProperty("createdAt");
+        comment.addLongProperty("remoteId");
 
         Property repositoryId = pullRequest.addLongProperty("repositoryId").notNull().getProperty();
         repository.addToMany(pullRequest, repositoryId);

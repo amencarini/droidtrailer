@@ -133,8 +133,8 @@ public class RepositoryActivity extends ListActivity {
 
         @Override
         protected void onPostExecute(ArrayList<Repository> repositories) {
-            mDialog.dismiss();
             refreshList(repositories);
+            mDialog.dismiss();
         }
     }
 

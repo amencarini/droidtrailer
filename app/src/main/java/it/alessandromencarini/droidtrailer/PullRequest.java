@@ -330,7 +330,7 @@ public class PullRequest {
             return false;
 
         PullRequest otherPullRequest = (PullRequest)o;
-        return number.equals(otherPullRequest.getNumber());
+        return id.equals(otherPullRequest.getId());
     }
 
     public String getCurrentState() {

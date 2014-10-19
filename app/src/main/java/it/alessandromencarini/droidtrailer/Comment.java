@@ -31,6 +31,9 @@ public class Comment {
 
 
     // KEEP FIELDS - put your custom fields here
+
+    private Boolean mMarkedForDestruction = false;
+
     // KEEP FIELDS END
 
     public Comment() {
@@ -165,6 +168,24 @@ public class Comment {
     }
 
     // KEEP METHODS - put your custom methods here
+
+    public Boolean getMarkedForDestruction() {
+        return mMarkedForDestruction;
+    }
+
+    public void setMarkedForDestruction(Boolean markedForDestruction) {
+        mMarkedForDestruction = markedForDestruction;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (getClass() != o.getClass())
+            return false;
+
+        Comment otherComment = (Comment)o;
+        return id.equals(otherComment.getId());
+    }
+
     // KEEP METHODS END
 
 }

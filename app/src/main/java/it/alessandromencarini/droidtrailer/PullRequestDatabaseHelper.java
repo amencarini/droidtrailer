@@ -24,26 +24,7 @@ public class PullRequestDatabaseHelper extends DatabaseHelper {
         return mPullRequestDao.insert(pullRequest);
     }
 
-//    public PullRequest findByRepositoryAndNumber(long repositoryId, Integer number) {
-//        return mPullRequestDao.queryBuilder()
-//                .where(
-//                        PullRequestDao.Properties.RepositoryId.eq(repositoryId),
-//                        PullRequestDao.Properties.Number.eq(number)
-//                ).list().get(0);
-//    }
-
     public void update(PullRequest pullRequest) {
         mPullRequestDao.update(pullRequest);
-    }
-
-    public void delete(PullRequest pullRequest) {
-        mPullRequestDao.delete(pullRequest);
-    }
-
-    public ArrayList<PullRequest> getNewPullRequests() {
-        return (ArrayList<PullRequest>)mPullRequestDao
-                .queryBuilder()
-                .where(PullRequestDao.Properties.ReadAt.isNull())
-                .list();
     }
 }

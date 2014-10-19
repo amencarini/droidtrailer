@@ -21,7 +21,24 @@ public class CommentDatabaseHelper extends DatabaseHelper {
 //        return (ArrayList<Repository>)mRepositoryDao.queryBuilder().list();
 //    }
 
-    public void insert(Comment... comments) {
-        mCommentDao.insertInTx(comments);
+    public ArrayList<Comment> getAll() {
+        return (ArrayList<Comment>)mCommentDao.queryBuilder().list();
+    }
+
+    public void upsert(Comment comment) {
+        mCommentDao.insertOrReplace(comment);
+    }
+
+    public void delete(Comment comment) {
+        mCommentDao.delete(comment);
+    }
+
+    public List<Comment> getNewComments(PullRequest pullRequest) {
+        return mCommentDao.queryBuilder()
+                .where(
+                        CommentDao.Properties.CreatedAt.ge(pullRequest.getReadAt()),
+                        CommentDao.Properties.PullRequestId.eq(pullRequest.getId())
+                )
+                .list();
     }
 }

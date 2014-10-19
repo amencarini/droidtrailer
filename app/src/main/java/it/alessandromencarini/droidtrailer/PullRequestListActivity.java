@@ -21,12 +21,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 
-import org.json.JSONException;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -42,7 +38,7 @@ public class PullRequestListActivity extends ListActivity {
 
     protected ProgressDialog mDialog;
 
-    // TODO: Transfer view handling to
+    // TODO: Transfer view handling to fragments
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,9 +58,9 @@ public class PullRequestListActivity extends ListActivity {
 
         setTitle("All PRs");
 
-        refreshList();
-
         mDialog = new ProgressDialog(this);
+
+        refreshList();
     }
 
     private void refreshList() {
@@ -78,6 +74,8 @@ public class PullRequestListActivity extends ListActivity {
         }
 
         mPullRequestAdapter.notifyDataSetChanged();
+
+        mDialog.dismiss();
     }
 
     private void storePullRequests(ArrayList<PullRequest> incomingPullRequests) {
@@ -92,15 +90,15 @@ public class PullRequestListActivity extends ListActivity {
             int position = storedPullRequests.indexOf(incomingPullRequest);
 
             if (position == -1) {
-                mPullRequestHelper.insert(incomingPullRequest);
                 storedPullRequests.add(incomingPullRequest);
+                incomingPullRequest.setReadAt(new Date());
+                mPullRequestHelper.insert(incomingPullRequest);
             } else {
-                PullRequest storedPullRequest = storedPullRequests.get(position);
-                storedPullRequest.setMarkedForDestruction(false);
-                incomingPullRequest.setId(storedPullRequest.getId());
-                incomingPullRequest.setUnreadCommentCount(storedPullRequest.getUnreadCommentCount());
-                mPullRequestHelper.update(incomingPullRequest);
+                Date storedReadAt = storedPullRequests.get(position).getReadAt();
+                Date newReadAt = (storedReadAt != null) ? storedReadAt : new Date();
+                incomingPullRequest.setReadAt(newReadAt);
                 storedPullRequests.set(position, incomingPullRequest);
+                mPullRequestHelper.update(incomingPullRequest);
             }
         }
 
@@ -109,8 +107,6 @@ public class PullRequestListActivity extends ListActivity {
                 new UpdatePullRequestTask(storedPullRequest).execute();
             }
         }
-
-        refreshList();
     }
 
     @Override
@@ -146,7 +142,7 @@ public class PullRequestListActivity extends ListActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_REPOSITORY_ACTIVITY:
-                refreshList();
+                new FetchPullRequestsTask().execute();
         }
 
     }
@@ -155,6 +151,7 @@ public class PullRequestListActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         PullRequest pullRequest = mPullRequests.get(position);
         pullRequest.setUnreadCommentCount(0);
+        pullRequest.setReadAt(new Date());
         pullRequest.update();
         refreshList();
 
@@ -202,8 +199,8 @@ public class PullRequestListActivity extends ListActivity {
     }
 
     private void refreshComments() {
-        ArrayList<PullRequest> newPullRequests = mPullRequestHelper.getNewPullRequests();
-        new FetchCommentsTask().execute(newPullRequests);
+        ArrayList<PullRequest> pullRequests = mPullRequestHelper.getAllPullRequests();
+        new FetchCommentsTask().execute(pullRequests);
     }
 
     private class FetchCommentsTask extends AsyncTask<ArrayList<PullRequest>, Void, ArrayList<Comment>> {
@@ -214,10 +211,9 @@ public class PullRequestListActivity extends ListActivity {
             ArrayList<Comment> comments = new ArrayList<Comment>();
 
             ArrayList<PullRequest> newPullRequests = prs[0];
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
-            String apiKey = prefs.getString("github_key", "");
+
             try {
-                comments = new GitHubFetcher(apiKey).fetchCommentsForPullRequests(newPullRequests);
+                comments = client().fetchCommentsForPullRequests(newPullRequests);
             } catch (IOException e) {
                 Log.e(TAG, "Connection problems: ", e);
             }
@@ -226,20 +222,39 @@ public class PullRequestListActivity extends ListActivity {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<Comment> comments) {
-            for (Comment comment : comments) {
-                mCommentHelper.insert(comment);
+        protected void onPostExecute(ArrayList<Comment> incomingComments) {
+            ArrayList<Comment> storedComments = mCommentHelper.getAll();
+
+            for (Comment storedComment : storedComments) {
+                storedComment .setMarkedForDestruction(true);
+            }
+
+            for (Comment incomingComment : incomingComments) {
+                int position = storedComments.indexOf(incomingComment);
+
+                if (position == -1) {
+                    storedComments.add(incomingComment);
+                } else {
+                    storedComments.set(position, incomingComment);
+                }
+
+                mCommentHelper.upsert(incomingComment);
+            }
+
+            for (Comment storedComment : storedComments) {
+                if (storedComment.getMarkedForDestruction()) {
+                    mCommentHelper.delete(storedComment);
+                }
             }
 
             for (PullRequest pullRequest : mPullRequests) {
-                int commentSize = pullRequest.getCommentList().size();
-                pullRequest.setUnreadCommentCount(commentSize - pullRequest.getCommentCount());
+                List<Comment> newComments = mCommentHelper.getNewComments(pullRequest);
+                pullRequest.setUnreadCommentCount(newComments.size());
                 pullRequest.setCommentCount(pullRequest.getCommentList().size());
-                pullRequest.setReadAt(new Date());
                 pullRequest.update();
             }
 
-            mDialog.dismiss();
+            refreshList();
         }
     }
 
@@ -256,10 +271,8 @@ public class PullRequestListActivity extends ListActivity {
         protected PullRequest doInBackground(Void... params) {
             String startingState = mPullRequest.getState();
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
-            String apiKey = prefs.getString("github_key", "");
             try {
-                mPullRequest = new GitHubFetcher(apiKey).updatePullRequest(mPullRequest);
+                mPullRequest = client().updatePullRequest(mPullRequest);
             } catch (IOException e) {
                 Log.e(TAG, "Connection problems: ", e);
             }
@@ -295,9 +308,7 @@ public class PullRequestListActivity extends ListActivity {
 
             for (Repository repository : selectedRepositories) {
                 try {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
-                    String apiKey = prefs.getString("github_key", "");
-                    pullRequests.addAll(new GitHubFetcher(apiKey).fetchPullRequestsForRepository(repository));
+                    pullRequests.addAll(client().fetchPullRequestsForRepository(repository));
                 } catch (IOException e) {
                     Log.e(TAG, "Connection problems: ", e);
                 }
@@ -311,5 +322,14 @@ public class PullRequestListActivity extends ListActivity {
             storePullRequests(pullRequests);
             refreshComments();
         }
+    }
+
+    private String getApiKey() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PullRequestListActivity.this);
+        return prefs.getString("github_key", "");
+    }
+
+    private GitHubFetcher client() {
+        return new GitHubFetcher(getApiKey());
     }
 }
