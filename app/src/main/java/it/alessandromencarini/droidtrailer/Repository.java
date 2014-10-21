@@ -1,5 +1,6 @@
 package it.alessandromencarini.droidtrailer;
 
+import java.util.ArrayList;
 import java.util.List;
 import it.alessandromencarini.droidtrailer.DaoSession;
 import de.greenrobot.dao.DaoException;

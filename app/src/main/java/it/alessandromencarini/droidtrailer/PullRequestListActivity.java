@@ -9,19 +9,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +41,7 @@ public class PullRequestListActivity extends ListActivity {
     private PullRequestDatabaseHelper mPullRequestHelper;
     private RepositoryDatabaseHelper mRepositoryHelper;
     private CommentDatabaseHelper mCommentHelper;
+    private AvatarDownloader<ImageView> mAvatarThread;
 
     protected ProgressDialog mDialog;
 
@@ -50,16 +57,24 @@ public class PullRequestListActivity extends ListActivity {
 
         mPullRequests = mPullRequestHelper.getAllPullRequests();
 
-        mPullRequestAdapter = new PullRequestAdapter(this, mPullRequests);
-
         mCommentHelper = new CommentDatabaseHelper(this);
-
-        setListAdapter(mPullRequestAdapter);
 
         setTitle("All PRs");
 
+        mAvatarThread = new AvatarDownloader<ImageView>(client(), new Handler());
+        mAvatarThread.setListener(new AvatarDownloader.Listener<ImageView>() {
+            @Override
+            public void onAvatarDownloaded(ImageView imageView, Bitmap avatar) {
+                imageView.setImageBitmap(avatar);
+            }
+        });
+        mAvatarThread.start();
+        mAvatarThread.getLooper();
+
         mDialog = new ProgressDialog(this);
 
+        mPullRequestAdapter = new PullRequestAdapter(this, mPullRequests, mAvatarThread);
+        setListAdapter(mPullRequestAdapter);
         refreshList();
     }
 
@@ -76,6 +91,13 @@ public class PullRequestListActivity extends ListActivity {
         mPullRequestAdapter.notifyDataSetChanged();
 
         mDialog.dismiss();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mAvatarThread.quit();
+        mAvatarThread.clearQueue();
     }
 
     private void storePullRequests(ArrayList<PullRequest> incomingPullRequests) {
@@ -131,7 +153,7 @@ public class PullRequestListActivity extends ListActivity {
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             case R.id.action_repositories:
-                startActivityForResult(new Intent(this, RepositoryActivity.class), REQUEST_CODE_REPOSITORY_ACTIVITY);
+                startActivityForResult(new Intent(this, RepositoryListActivity.class), REQUEST_CODE_REPOSITORY_ACTIVITY);
                 return true;
         }
 
@@ -144,7 +166,6 @@ public class PullRequestListActivity extends ListActivity {
             case REQUEST_CODE_REPOSITORY_ACTIVITY:
                 new FetchPullRequestsTask().execute();
         }
-
     }
 
     @Override
@@ -191,7 +212,7 @@ public class PullRequestListActivity extends ListActivity {
                 .build();
 
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(0, notification);
+        notificationManager.notify(pullRequest.getRepository().getFullName(), pullRequest.getNumber(), notification);
 
         int position = mPullRequests.indexOf(pullRequest);
         mPullRequests.set(position, pullRequest);
@@ -225,6 +246,8 @@ public class PullRequestListActivity extends ListActivity {
         protected void onPostExecute(ArrayList<Comment> incomingComments) {
             ArrayList<Comment> storedComments = mCommentHelper.getAll();
 
+            Comment newComment = null;
+
             for (Comment storedComment : storedComments) {
                 storedComment .setMarkedForDestruction(true);
             }
@@ -234,6 +257,7 @@ public class PullRequestListActivity extends ListActivity {
 
                 if (position == -1) {
                     storedComments.add(incomingComment);
+                    newComment = incomingComment;
                 } else {
                     storedComments.set(position, incomingComment);
                 }
@@ -255,8 +279,51 @@ public class PullRequestListActivity extends ListActivity {
             }
 
             refreshList();
+
+            if (newComment != null)
+                notifyComments(newComment);
         }
     }
+
+    private Bitmap getBitmapFromURL(String strURL) {
+        try {
+            URL url = new URL(strURL);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    private void notifyComments(Comment comment) {
+        Resources r = getResources();
+
+        // TODO: Set comment url
+        // PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(Intent.ACTION_VIEW, Uri.parse(pullRequest.getUrl())), 0);
+
+        Notification notification = new Notification.Builder(this)
+                .setWhen(comment.getCreatedAt().getTime())
+                .setShowWhen(true)
+                .setTicker("New comment")
+                .setContentTitle("New comment")
+                .setContentText(comment.getBody())
+                .setSmallIcon(R.drawable.trailer_icon)
+                // .setLargeIcon(bitmap)
+                // .setContentIntent(pi)
+                .setAutoCancel(true)
+                .build();
+
+        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(comment.getPullRequest().getRepository().getFullName(), comment.getPullRequest().getNumber(), notification);
+    }
+
+
 
     private class UpdatePullRequestTask extends AsyncTask<Void, Void, PullRequest> {
         private static final String TAG = "UpdatePullRequestTask";

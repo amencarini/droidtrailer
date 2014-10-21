@@ -26,19 +26,11 @@
             android:id="@+id/list_item_pull_request_userAvatarImageView" />
 
         <TextView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:text="12"
-            android:id="@+id/list_item_pull_request_commentCountTextView"
-            android:gravity="center"
-            android:padding="8dp" />
-
-        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="3"
-            android:id="@+id/list_item_pull_request_unreadCommentCountTextView"
+            android:id="@+id/list_item_pull_request_commentCountTextView"
             android:layout_alignParentStart="false"
             android:background="@android:color/holo_red_light"
             android:textColor="@android:color/white"
@@ -51,9 +43,10 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/list_item_pull_request_commentCountTextView"
             android:id="@+id/linearLayout"
-            android:layout_marginLeft="8dp">
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/list_item_pull_request_userAvatarImageView"
+            android:paddingLeft="4dp">
 
             <TextView
                 android:layout_width="wrap_content"

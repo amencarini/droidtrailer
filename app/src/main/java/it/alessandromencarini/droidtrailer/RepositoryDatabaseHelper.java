@@ -29,15 +29,15 @@ public class RepositoryDatabaseHelper extends DatabaseHelper {
         return mRepositoryDao.insert(repository);
     }
 
-    public Repository findByFullName(String fullName) {
-        try {
-            return mRepositoryDao.queryBuilder()
-                    .where(RepositoryDao.Properties.FullName.eq(fullName))
-                    .list().get(0);
-        } catch (IndexOutOfBoundsException e) {
-            return null;
-        }
-    }
+//    public Repository findByFullName(String fullName) {
+//        try {
+//            return mRepositoryDao.queryBuilder()
+//                    .where(RepositoryDao.Properties.FullName.eq(fullName))
+//                    .list().get(0);
+//        } catch (IndexOutOfBoundsException e) {
+//            return null;
+//        }
+//    }
 
     public void update(Repository repository) {
         mRepositoryDao.update(repository);

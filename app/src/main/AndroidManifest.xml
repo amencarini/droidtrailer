@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".RepositoryActivity"
+            android:name=".RepositoryListActivity"
             android:label="@string/title_activity_repository" >
         </activity>
     </application>

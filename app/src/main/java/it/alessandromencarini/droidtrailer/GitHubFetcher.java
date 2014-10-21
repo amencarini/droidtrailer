@@ -123,26 +123,7 @@ public class GitHubFetcher {
         return allComments;
     }
 
-    // This is to override the lack of Watched wrapper in github-api
-    private class Response {
-        private String mBody;
-        private Map<String, List<String>> mHeaders;
-
-        private Response(String body, Map<String, List<String>> headers) {
-            mBody = body;
-            mHeaders = headers;
-        }
-
-        public String getBody() {
-            return mBody;
-        }
-
-        public Map<String, List<String>> getHeaders() {
-            return mHeaders;
-        }
-    }
-
-    Response getUrl(String urlSpec) throws IOException {
+    public Response getUrl(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
@@ -161,9 +142,7 @@ public class GitHubFetcher {
             }
             out.close();
 
-            String body = new String(out.toByteArray());
-
-            return new Response(body, connection.getHeaderFields());
+            return new Response(out.toByteArray(), connection.getHeaderFields());
         } finally {
             connection.disconnect();
         }
@@ -184,7 +163,7 @@ public class GitHubFetcher {
             do {
                 Response response = getUrl(url);
 
-                JSONArray jsonObjects = new JSONArray(response.getBody());
+                JSONArray jsonObjects = new JSONArray(response.getBodyString());
 
                 for (int i = 0; i < jsonObjects.length(); i++) {
                     JSONObject repository = jsonObjects.getJSONObject(i);

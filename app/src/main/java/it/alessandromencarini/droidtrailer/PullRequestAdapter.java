@@ -19,11 +19,13 @@ import java.util.ArrayList;
 public class PullRequestAdapter extends ArrayAdapter<PullRequest> {
     private final Context mContext;
     private ArrayList<PullRequest> mPullRequests;
+    private AvatarDownloader<ImageView> mAvatarDownloader;
 
-    public PullRequestAdapter(Context context, ArrayList<PullRequest> pullRequests) {
+    public PullRequestAdapter(Context context, ArrayList<PullRequest> pullRequests, AvatarDownloader<ImageView> avatarDownloader) {
         super(context, R.layout.list_item_pull_request, pullRequests);
         mContext = context;
         mPullRequests = pullRequests;
+        mAvatarDownloader = avatarDownloader;
     }
 
     @Override
@@ -48,16 +50,17 @@ public class PullRequestAdapter extends ArrayAdapter<PullRequest> {
         TextView commentCountTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_commentCountTextView);
         commentCountTextView.setText(pullRequest.getCommentCount().toString());
 
-        TextView unreadCommentCountTextView = (TextView)rowView.findViewById(R.id.list_item_pull_request_unreadCommentCountTextView);
         if (pullRequest.getUnreadCommentCount() > 0) {
-            unreadCommentCountTextView.setText(pullRequest.getUnreadCommentCount().toString());
-            unreadCommentCountTextView.setVisibility(View.VISIBLE);
+            commentCountTextView.setBackgroundColor(Color.RED);
+            commentCountTextView.setTextColor(Color.WHITE);
         } else {
-            unreadCommentCountTextView.setVisibility(View.INVISIBLE);
+            commentCountTextView.setBackgroundColor(Color.argb(255, 200, 200, 200));
+            commentCountTextView.setTextColor(Color.BLACK);
         }
 
         ImageView userAvatarImageView = (ImageView)rowView.findViewById(R.id.list_item_pull_request_userAvatarImageView);
         userAvatarImageView.setImageResource(R.drawable.octocat);
+        mAvatarDownloader.queueAvatar(userAvatarImageView, pullRequest.getUserAvatarUrl());
 
         return rowView;
     }
