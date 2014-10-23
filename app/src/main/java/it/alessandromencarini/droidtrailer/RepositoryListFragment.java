@@ -1,10 +1,10 @@
 package it.alessandromencarini.droidtrailer;
 
+import android.app.ListFragment;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.ListFragment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -23,36 +23,40 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class RepositoryListFragment extends ListFragment {
-    private ArrayList<Repository> mRepositories;
+    private List<Repository> mRepositories;
     private RepositoryAdapter mAdapter;
+    private DataManager mDataManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        mDataManager = DataManager.get(getActivity());
 
         getActivity().setTitle(R.string.title_activity_repository);
-        mRepositories = DataManager.get(getActivity()).getRepositories();
+        mRepositories = mDataManager.getRepositories();
 
-        mAdapter = new RepositoryAdapter(mRepositories);
+        mAdapter = new RepositoryAdapter((ArrayList<Repository>) mRepositories);
         setListAdapter(mAdapter);
 
         sortRepositories();
+        setRetainInstance(true);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        DataManager.clearUnselectedRepositories();
+        mDataManager.clearUnselectedRepositories();
     }
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         Repository r = ((RepositoryAdapter)getListAdapter()).getItem(position);
         r.setSelected(!r.getSelected());
-        r.update();
+        mDataManager.update(r);
         ((RepositoryAdapter) getListAdapter()).notifyDataSetChanged();
     }
 
@@ -73,6 +77,28 @@ public class RepositoryListFragment extends ListFragment {
         }
     }
 
+    private void storeNewRepositories(ArrayList<Repository> incomingRepositories) {
+        List<Repository> storedRepositories = mDataManager.getRepositories();
+
+        for (Repository incomingRepository : incomingRepositories) {
+            int position = storedRepositories.indexOf(incomingRepository);
+
+            if (position == -1) {
+                mDataManager.save(incomingRepository);
+                storedRepositories.add(incomingRepository);
+            }
+        }
+
+        mRepositories.clear();
+        mRepositories.addAll(storedRepositories);
+        sortRepositories();
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void sortRepositories() {
+        Collections.sort(mRepositories, new SortRepositoriesByFullName());
+    }
+
     private class RepositoryAdapter extends ArrayAdapter<Repository> {
         public RepositoryAdapter(ArrayList<Repository> repositories) {
             super(getActivity(), 0, repositories);
@@ -87,44 +113,22 @@ public class RepositoryListFragment extends ListFragment {
 
             final Repository r = getItem(position);
 
-            TextView fullNameTextView = (TextView)convertView.findViewById(R.id.list_item_repository_fullNameTextView);
+            TextView fullNameTextView = (TextView) convertView.findViewById(R.id.list_item_repository_fullNameTextView);
             fullNameTextView.setText(r.getFullName());
 
-            CheckBox selectedCheckBox = (CheckBox)convertView.findViewById(R.id.list_item_repository_selectedCheckBox);
+            CheckBox selectedCheckBox = (CheckBox) convertView.findViewById(R.id.list_item_repository_selectedCheckBox);
             selectedCheckBox.setChecked(r.getSelected());
 
             selectedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     r.setSelected(b);
-                    r.update();
+                    mDataManager.update(r);
                 }
             });
 
             return convertView;
         }
-    }
-
-    private void storeNewRepositories(ArrayList<Repository> incomingRepositories) {
-        ArrayList<Repository> storedRepositories = DataManager.get(getActivity()).getRepositories();
-
-        for (Repository incomingRepository : incomingRepositories) {
-            int position = storedRepositories.indexOf(incomingRepository);
-
-            if (position == -1) {
-                DataManager.save(incomingRepository);
-                storedRepositories.add(incomingRepository);
-            }
-        }
-
-        mRepositories.clear();
-        mRepositories.addAll(storedRepositories);
-        sortRepositories();
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void sortRepositories() {
-        Collections.sort(mRepositories, new SortRepositoriesByFullName());
     }
 
     private class SortRepositoriesByFullName implements Comparator<Repository> {

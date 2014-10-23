@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
  * Created by alessandromencarini on 24/09/2014.
  */
 public class DatabaseHelper {
-
     protected DaoSession mDaoSession;
 
     public DatabaseHelper(Context context) {
@@ -16,5 +15,4 @@ public class DatabaseHelper {
         DaoMaster daoMaster = new DaoMaster(db);
         mDaoSession = daoMaster.newSession();
     }
-
 }

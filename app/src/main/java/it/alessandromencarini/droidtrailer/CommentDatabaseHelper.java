@@ -17,28 +17,28 @@ public class CommentDatabaseHelper extends DatabaseHelper {
         mCommentDao = mDaoSession.getCommentDao();
     }
 
-//    public ArrayList<Repository> getAllPullRequests() {
-//        return (ArrayList<Repository>)mRepositoryDao.queryBuilder().list();
-//    }
-
     public ArrayList<Comment> getAll() {
         return (ArrayList<Comment>)mCommentDao.queryBuilder().list();
     }
 
-    public void upsert(Comment comment) {
-        mCommentDao.insertOrReplace(comment);
-    }
-
-    public void delete(Comment comment) {
-        mCommentDao.delete(comment);
-    }
-
-    public List<Comment> getNewComments(PullRequest pullRequest) {
+    public List<Comment> getNewComments(PullRequest pr) {
         return mCommentDao.queryBuilder()
                 .where(
-                        CommentDao.Properties.CreatedAt.ge(pullRequest.getReadAt()),
-                        CommentDao.Properties.PullRequestId.eq(pullRequest.getId())
+                        CommentDao.Properties.PullRequestId.eq(pr.getId()),
+                        CommentDao.Properties.CreatedAt.ge(pr.getReadAt())
                 )
                 .list();
+    }
+
+    public void insert(Comment c) {
+        mCommentDao.insert(c);
+    }
+
+    public void update(Comment c) {
+        mCommentDao.update(c);
+    }
+
+    public void delete(Comment c) {
+        mCommentDao.delete(c);
     }
 }
