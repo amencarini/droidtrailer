@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -39,11 +38,9 @@ public class RepositoryListFragment extends ListFragment {
         getActivity().setTitle(R.string.title_activity_repository);
         mRepositories = mDataManager.getRepositories();
 
+        sortRepositories();
         mAdapter = new RepositoryAdapter((ArrayList<Repository>) mRepositories);
         setListAdapter(mAdapter);
-
-        sortRepositories();
-        setRetainInstance(true);
     }
 
     @Override
@@ -106,12 +103,12 @@ public class RepositoryListFragment extends ListFragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            Repository r = getItem(position);
+
             if (convertView == null) {
                 convertView = getActivity().getLayoutInflater()
                         .inflate(R.layout.list_item_repository, null);
             }
-
-            final Repository r = getItem(position);
 
             TextView fullNameTextView = (TextView) convertView.findViewById(R.id.list_item_repository_fullNameTextView);
             fullNameTextView.setText(r.getFullName());
@@ -119,13 +116,20 @@ public class RepositoryListFragment extends ListFragment {
             CheckBox selectedCheckBox = (CheckBox) convertView.findViewById(R.id.list_item_repository_selectedCheckBox);
             selectedCheckBox.setChecked(r.getSelected());
 
-            selectedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    r.setSelected(b);
-                    mDataManager.update(r);
-                }
-            });
+//            selectedCheckBox.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    convertView
+//                }
+//            });
+
+//            selectedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//                @Override
+//                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//                    r.setSelected(b);
+//                    mDataManager.update(r);
+//                }
+//            });
 
             return convertView;
         }
@@ -133,8 +137,8 @@ public class RepositoryListFragment extends ListFragment {
 
     private class SortRepositoriesByFullName implements Comparator<Repository> {
         @Override
-        public int compare(Repository repository, Repository repository2) {
-            return repository.getFullName().compareTo(repository2.getFullName());
+        public int compare(Repository r1, Repository r2) {
+            return r1.getFullName().compareTo(r2.getFullName());
         }
     }
 
