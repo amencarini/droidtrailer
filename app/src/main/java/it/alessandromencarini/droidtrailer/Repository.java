@@ -1,6 +1,5 @@
 package it.alessandromencarini.droidtrailer;
 
-import java.util.ArrayList;
 import java.util.List;
 import it.alessandromencarini.droidtrailer.DaoSession;
 import de.greenrobot.dao.DaoException;
@@ -19,8 +18,8 @@ public class Repository {
     private Long id;
     private String fullName;
     private String url;
-    private Long remoteId;
     private Boolean selected;
+    private java.util.Date readAt;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -40,12 +39,12 @@ public class Repository {
         this.id = id;
     }
 
-    public Repository(Long id, String fullName, String url, Long remoteId, Boolean selected) {
+    public Repository(Long id, String fullName, String url, Boolean selected, java.util.Date readAt) {
         this.id = id;
         this.fullName = fullName;
         this.url = url;
-        this.remoteId = remoteId;
         this.selected = selected;
+        this.readAt = readAt;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -78,16 +77,16 @@ public class Repository {
         this.url = url;
     }
 
-    public Long getRemoteId() {
-        return remoteId;
-    }
-
-    public void setRemoteId(Long remoteId) {
-        this.remoteId = remoteId;
-    }
-
     public void setSelected(Boolean selected) {
         this.selected = selected;
+    }
+
+    public java.util.Date getReadAt() {
+        return readAt;
+    }
+
+    public void setReadAt(java.util.Date readAt) {
+        this.readAt = readAt;
     }
 
     /** To-many relationship, resolved on first access (and after reset). Changes to to-many relations are not persisted, make changes to the target entity. */

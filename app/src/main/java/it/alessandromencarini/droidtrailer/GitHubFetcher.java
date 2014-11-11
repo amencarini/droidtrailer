@@ -2,12 +2,15 @@ package it.alessandromencarini.droidtrailer;
 
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.eclipse.egit.github.core.RepositoryId;
+import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
+import org.eclipse.egit.github.core.service.UserService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,19 +37,29 @@ public class GitHubFetcher {
     private PullRequestService mPullRequestService;
     private IssueService mIssueService;
     private RepositoryService mRepositoryService;
+    private String mUserLogin = "";
 
     private static final String TAG      = "GitHubFetcher";
 
     private static final String ENDPOINT = "https://api.github.com";
     private static final String PART_SUBSCRIPTIONS = "/user/subscriptions";
 
-    public GitHubFetcher(String apiKey) {
+    public GitHubFetcher(String apiKey, String userLogin) {
         mApiKey = apiKey;
+        mUserLogin = userLogin;
         mGitHubClient.setOAuth2Token(apiKey);
 
-        mPullRequestService= new PullRequestService(mGitHubClient);
+        mPullRequestService = new PullRequestService(mGitHubClient);
         mIssueService = new IssueService(mGitHubClient);
         mRepositoryService = new RepositoryService(mGitHubClient);
+    }
+
+    public void setUserLogin(String userLogin) {
+        mUserLogin = userLogin;
+    }
+
+    public String getUserLogin() {
+        return mUserLogin;
     }
 
     public ArrayList<PullRequest> fetchPullRequestsForRepository(Repository repository) throws IOException {
@@ -54,10 +67,11 @@ public class GitHubFetcher {
 
         org.eclipse.egit.github.core.Repository remoteRepository = mRepositoryService.getRepository(repository.getOwner(), repository.getName());
 
-
         ArrayList<org.eclipse.egit.github.core.PullRequest> pullRequestList = (ArrayList<org.eclipse.egit.github.core.PullRequest>)mPullRequestService.getPullRequests(remoteRepository, "open");
 
         for (org.eclipse.egit.github.core.PullRequest remotePullRequest : pullRequestList) {
+            User assignee = remotePullRequest.getAssignee();
+
             pullRequests.add(new PullRequest(
                     remotePullRequest.getId(),
                     remotePullRequest.getTitle(),
@@ -67,13 +81,14 @@ public class GitHubFetcher {
                     remotePullRequest.getUser().getAvatarUrl(),
                     remotePullRequest.getNumber(),
                     remotePullRequest.getComments(),
-                    null,
-                    null, // TODO: add check for current API user
+                    assignee != null ? assignee.getLogin().equals(mUserLogin) : false,
                     remotePullRequest.isMergeable(),
                     remotePullRequest.getCreatedAt(),
+                    remotePullRequest.getUpdatedAt(),
                     remotePullRequest.getClosedAt(),
                     remotePullRequest.getMergedAt(),
                     null,
+                    remotePullRequest.getUser().getLogin().equals(mUserLogin),
                     remoteRepository.getId()
             ));
         }
@@ -148,44 +163,39 @@ public class GitHubFetcher {
         }
     }
 
-    public ArrayList<Repository> fetchRepositories() throws JSONException {
+    public ArrayList<Repository> fetchRepositories() throws JSONException, IOException {
         ArrayList<Repository> repositories = new ArrayList<Repository>();
 
         // TODO: Block requests if apikey is not available
         // TODO: reduce duplication
-        try {
-            String baseUri = ENDPOINT + PART_SUBSCRIPTIONS;
+        String baseUri = ENDPOINT + PART_SUBSCRIPTIONS;
 
-            String url = Uri.parse(baseUri).buildUpon()
-                    .appendQueryParameter("access_token", mApiKey)
-                    .build().toString();
+        String url = Uri.parse(baseUri).buildUpon()
+                .appendQueryParameter("access_token", mApiKey)
+                .build().toString();
 
-            do {
-                Response response = getUrl(url);
+        do {
+            Response response = getUrl(url);
 
-                JSONArray jsonObjects = new JSONArray(response.getBodyString());
+            JSONArray jsonObjects = new JSONArray(response.getBodyString());
 
-                for (int i = 0; i < jsonObjects.length(); i++) {
-                    JSONObject repository = jsonObjects.getJSONObject(i);
-                    repositories.add(new Repository(repository));
-                }
+            for (int i = 0; i < jsonObjects.length(); i++) {
+                JSONObject repository = jsonObjects.getJSONObject(i);
+                repositories.add(new Repository(repository));
+            }
 
-                List<String> nextHeader = response.getHeaders().get("Link");
-                String nextUrl = nextHeader.get(0);
-                Pattern pattern = Pattern.compile("<(.*)>; rel=\"next\"");
-                Matcher matcher = pattern.matcher(nextUrl);
+            List<String> nextHeader = response.getHeaders().get("Link");
+            String nextUrl = nextHeader.get(0);
+            Pattern pattern = Pattern.compile("<(.*)>; rel=\"next\"");
+            Matcher matcher = pattern.matcher(nextUrl);
 
-                if (matcher.find()) {
-                    url = matcher.group(1);
-                } else {
-                    url = null;
-                }
-            } while (url != null);
-        } catch (IOException ioe) {
-            Log.e(TAG, "Failed to fetch repositories: ", ioe);
-        }
+            if (matcher.find()) {
+                url = matcher.group(1);
+            } else {
+                url = null;
+            }
+        } while (url != null);
 
         return repositories;
     }
-
 }

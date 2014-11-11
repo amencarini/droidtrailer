@@ -27,4 +27,8 @@ public class PullRequestDatabaseHelper extends DatabaseHelper {
     public void update(PullRequest pullRequest) {
         mPullRequestDao.update(pullRequest);
     }
+
+    public PullRequest find(long id) {
+        return mPullRequestDao.load(id);
+    }
 }

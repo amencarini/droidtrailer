@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
+import android.widget.Toast;
 
 /**
  * Created by ale on 21/10/2014.

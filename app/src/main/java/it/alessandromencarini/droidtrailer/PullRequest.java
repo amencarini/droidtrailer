@@ -27,13 +27,14 @@ public class PullRequest {
     private String userAvatarUrl;
     private Integer number;
     private Integer commentCount;
-    private Integer unreadCommentCount;
     private Boolean assignedToMe;
     private Boolean mergeable;
     private java.util.Date createdAt;
+    private java.util.Date updatedAt;
     private java.util.Date closedAt;
     private java.util.Date mergedAt;
     private java.util.Date readAt;
+    private Boolean participated;
     private long repositoryId;
 
     /** Used to resolve relations */
@@ -61,7 +62,7 @@ public class PullRequest {
         this.id = id;
     }
 
-    public PullRequest(Long id, String title, String userLogin, String state, String url, String userAvatarUrl, Integer number, Integer commentCount, Integer unreadCommentCount, Boolean assignedToMe, Boolean mergeable, java.util.Date createdAt, java.util.Date closedAt, java.util.Date mergedAt, java.util.Date readAt, long repositoryId) {
+    public PullRequest(Long id, String title, String userLogin, String state, String url, String userAvatarUrl, Integer number, Integer commentCount, Boolean assignedToMe, Boolean mergeable, java.util.Date createdAt, java.util.Date updatedAt, java.util.Date closedAt, java.util.Date mergedAt, java.util.Date readAt, Boolean participated, long repositoryId) {
         this.id = id;
         this.title = title;
         this.userLogin = userLogin;
@@ -70,13 +71,14 @@ public class PullRequest {
         this.userAvatarUrl = userAvatarUrl;
         this.number = number;
         this.commentCount = commentCount;
-        this.unreadCommentCount = unreadCommentCount;
         this.assignedToMe = assignedToMe;
         this.mergeable = mergeable;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.closedAt = closedAt;
         this.mergedAt = mergedAt;
         this.readAt = readAt;
+        this.participated = participated;
         this.repositoryId = repositoryId;
     }
 
@@ -150,10 +152,6 @@ public class PullRequest {
         this.commentCount = commentCount;
     }
 
-    public void setUnreadCommentCount(Integer unreadCommentCount) {
-        this.unreadCommentCount = unreadCommentCount;
-    }
-
     public Boolean getAssignedToMe() {
         return assignedToMe;
     }
@@ -178,6 +176,14 @@ public class PullRequest {
         this.createdAt = createdAt;
     }
 
+    public java.util.Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(java.util.Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     public java.util.Date getClosedAt() {
         return closedAt;
     }
@@ -200,6 +206,14 @@ public class PullRequest {
 
     public void setReadAt(java.util.Date readAt) {
         this.readAt = readAt;
+    }
+
+    public Boolean getParticipated() {
+        return participated;
+    }
+
+    public void setParticipated(Boolean participated) {
+        this.participated = participated;
     }
 
     public long getRepositoryId() {
@@ -307,13 +321,6 @@ public class PullRequest {
             Log.e("PullRequest", "Could not parse date: ", e);
             return null;
         }
-    }
-
-    public Integer getUnreadCommentCount() {
-        if (unreadCommentCount != null)
-            return unreadCommentCount;
-        else
-            return 0;
     }
 
     public Boolean getMarkedForDestruction() {

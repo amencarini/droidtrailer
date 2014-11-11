@@ -1,5 +1,6 @@
 package it.alessandromencarini.droidtrailer;
 
+import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -11,8 +12,20 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 public class SettingsActivity extends PreferenceActivity {
+
+    public final static String FROM_MAIN_ACTIVITY = "fromMainActivity";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Boolean fromMainActivity = getIntent().getBooleanExtra(FROM_MAIN_ACTIVITY, false);
+        if (fromMainActivity)
+            Toast.makeText(SettingsActivity.this, "Please add your GitHub token!", Toast.LENGTH_LONG).show();
+    }
 
     /**
      * A preference value change listener that updates the preference's summary

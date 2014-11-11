@@ -36,14 +36,15 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         public final static Property UserAvatarUrl = new Property(5, String.class, "userAvatarUrl", false, "USER_AVATAR_URL");
         public final static Property Number = new Property(6, Integer.class, "number", false, "NUMBER");
         public final static Property CommentCount = new Property(7, Integer.class, "commentCount", false, "COMMENT_COUNT");
-        public final static Property UnreadCommentCount = new Property(8, Integer.class, "unreadCommentCount", false, "UNREAD_COMMENT_COUNT");
-        public final static Property AssignedToMe = new Property(9, Boolean.class, "assignedToMe", false, "ASSIGNED_TO_ME");
-        public final static Property Mergeable = new Property(10, Boolean.class, "mergeable", false, "MERGEABLE");
-        public final static Property CreatedAt = new Property(11, java.util.Date.class, "createdAt", false, "CREATED_AT");
+        public final static Property AssignedToMe = new Property(8, Boolean.class, "assignedToMe", false, "ASSIGNED_TO_ME");
+        public final static Property Mergeable = new Property(9, Boolean.class, "mergeable", false, "MERGEABLE");
+        public final static Property CreatedAt = new Property(10, java.util.Date.class, "createdAt", false, "CREATED_AT");
+        public final static Property UpdatedAt = new Property(11, java.util.Date.class, "updatedAt", false, "UPDATED_AT");
         public final static Property ClosedAt = new Property(12, java.util.Date.class, "closedAt", false, "CLOSED_AT");
         public final static Property MergedAt = new Property(13, java.util.Date.class, "mergedAt", false, "MERGED_AT");
         public final static Property ReadAt = new Property(14, java.util.Date.class, "readAt", false, "READ_AT");
-        public final static Property RepositoryId = new Property(15, long.class, "repositoryId", false, "REPOSITORY_ID");
+        public final static Property Participated = new Property(15, Boolean.class, "participated", false, "PARTICIPATED");
+        public final static Property RepositoryId = new Property(16, long.class, "repositoryId", false, "REPOSITORY_ID");
     };
 
     private DaoSession daoSession;
@@ -71,14 +72,15 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
                 "'USER_AVATAR_URL' TEXT," + // 5: userAvatarUrl
                 "'NUMBER' INTEGER," + // 6: number
                 "'COMMENT_COUNT' INTEGER," + // 7: commentCount
-                "'UNREAD_COMMENT_COUNT' INTEGER," + // 8: unreadCommentCount
-                "'ASSIGNED_TO_ME' INTEGER," + // 9: assignedToMe
-                "'MERGEABLE' INTEGER," + // 10: mergeable
-                "'CREATED_AT' INTEGER," + // 11: createdAt
+                "'ASSIGNED_TO_ME' INTEGER," + // 8: assignedToMe
+                "'MERGEABLE' INTEGER," + // 9: mergeable
+                "'CREATED_AT' INTEGER," + // 10: createdAt
+                "'UPDATED_AT' INTEGER," + // 11: updatedAt
                 "'CLOSED_AT' INTEGER," + // 12: closedAt
                 "'MERGED_AT' INTEGER," + // 13: mergedAt
                 "'READ_AT' INTEGER," + // 14: readAt
-                "'REPOSITORY_ID' INTEGER NOT NULL );"); // 15: repositoryId
+                "'PARTICIPATED' INTEGER," + // 15: participated
+                "'REPOSITORY_ID' INTEGER NOT NULL );"); // 16: repositoryId
     }
 
     /** Drops the underlying database table. */
@@ -132,24 +134,24 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
             stmt.bindLong(8, commentCount);
         }
  
-        Integer unreadCommentCount = entity.getUnreadCommentCount();
-        if (unreadCommentCount != null) {
-            stmt.bindLong(9, unreadCommentCount);
-        }
- 
         Boolean assignedToMe = entity.getAssignedToMe();
         if (assignedToMe != null) {
-            stmt.bindLong(10, assignedToMe ? 1l: 0l);
+            stmt.bindLong(9, assignedToMe ? 1l: 0l);
         }
  
         Boolean mergeable = entity.getMergeable();
         if (mergeable != null) {
-            stmt.bindLong(11, mergeable ? 1l: 0l);
+            stmt.bindLong(10, mergeable ? 1l: 0l);
         }
  
         java.util.Date createdAt = entity.getCreatedAt();
         if (createdAt != null) {
-            stmt.bindLong(12, createdAt.getTime());
+            stmt.bindLong(11, createdAt.getTime());
+        }
+ 
+        java.util.Date updatedAt = entity.getUpdatedAt();
+        if (updatedAt != null) {
+            stmt.bindLong(12, updatedAt.getTime());
         }
  
         java.util.Date closedAt = entity.getClosedAt();
@@ -166,7 +168,12 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         if (readAt != null) {
             stmt.bindLong(15, readAt.getTime());
         }
-        stmt.bindLong(16, entity.getRepositoryId());
+ 
+        Boolean participated = entity.getParticipated();
+        if (participated != null) {
+            stmt.bindLong(16, participated ? 1l: 0l);
+        }
+        stmt.bindLong(17, entity.getRepositoryId());
     }
 
     @Override
@@ -193,14 +200,15 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
             cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // userAvatarUrl
             cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // number
             cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // commentCount
-            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8), // unreadCommentCount
-            cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0, // assignedToMe
-            cursor.isNull(offset + 10) ? null : cursor.getShort(offset + 10) != 0, // mergeable
-            cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)), // createdAt
+            cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0, // assignedToMe
+            cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0, // mergeable
+            cursor.isNull(offset + 10) ? null : new java.util.Date(cursor.getLong(offset + 10)), // createdAt
+            cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)), // updatedAt
             cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)), // closedAt
             cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)), // mergedAt
             cursor.isNull(offset + 14) ? null : new java.util.Date(cursor.getLong(offset + 14)), // readAt
-            cursor.getLong(offset + 15) // repositoryId
+            cursor.isNull(offset + 15) ? null : cursor.getShort(offset + 15) != 0, // participated
+            cursor.getLong(offset + 16) // repositoryId
         );
         return entity;
     }
@@ -216,14 +224,15 @@ public class PullRequestDao extends AbstractDao<PullRequest, Long> {
         entity.setUserAvatarUrl(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
         entity.setNumber(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
         entity.setCommentCount(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
-        entity.setUnreadCommentCount(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
-        entity.setAssignedToMe(cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0);
-        entity.setMergeable(cursor.isNull(offset + 10) ? null : cursor.getShort(offset + 10) != 0);
-        entity.setCreatedAt(cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)));
+        entity.setAssignedToMe(cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0);
+        entity.setMergeable(cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0);
+        entity.setCreatedAt(cursor.isNull(offset + 10) ? null : new java.util.Date(cursor.getLong(offset + 10)));
+        entity.setUpdatedAt(cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)));
         entity.setClosedAt(cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)));
         entity.setMergedAt(cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)));
         entity.setReadAt(cursor.isNull(offset + 14) ? null : new java.util.Date(cursor.getLong(offset + 14)));
-        entity.setRepositoryId(cursor.getLong(offset + 15));
+        entity.setParticipated(cursor.isNull(offset + 15) ? null : cursor.getShort(offset + 15) != 0);
+        entity.setRepositoryId(cursor.getLong(offset + 16));
      }
     
     /** @inheritdoc */

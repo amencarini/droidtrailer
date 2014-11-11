@@ -26,8 +26,8 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
         public final static Property FullName = new Property(1, String.class, "fullName", false, "FULL_NAME");
         public final static Property Url = new Property(2, String.class, "url", false, "URL");
-        public final static Property RemoteId = new Property(3, Long.class, "remoteId", false, "REMOTE_ID");
-        public final static Property Selected = new Property(4, Boolean.class, "selected", false, "SELECTED");
+        public final static Property Selected = new Property(3, Boolean.class, "selected", false, "SELECTED");
+        public final static Property ReadAt = new Property(4, java.util.Date.class, "readAt", false, "READ_AT");
     };
 
     private DaoSession daoSession;
@@ -49,8 +49,8 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
                 "'_id' INTEGER PRIMARY KEY ," + // 0: id
                 "'FULL_NAME' TEXT," + // 1: fullName
                 "'URL' TEXT," + // 2: url
-                "'REMOTE_ID' INTEGER," + // 3: remoteId
-                "'SELECTED' INTEGER);"); // 4: selected
+                "'SELECTED' INTEGER," + // 3: selected
+                "'READ_AT' INTEGER);"); // 4: readAt
     }
 
     /** Drops the underlying database table. */
@@ -79,14 +79,14 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
             stmt.bindString(3, url);
         }
  
-        Long remoteId = entity.getRemoteId();
-        if (remoteId != null) {
-            stmt.bindLong(4, remoteId);
-        }
- 
         Boolean selected = entity.getSelected();
         if (selected != null) {
-            stmt.bindLong(5, selected ? 1l: 0l);
+            stmt.bindLong(4, selected ? 1l: 0l);
+        }
+ 
+        java.util.Date readAt = entity.getReadAt();
+        if (readAt != null) {
+            stmt.bindLong(5, readAt.getTime());
         }
     }
 
@@ -109,8 +109,8 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // fullName
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // url
-            cursor.isNull(offset + 3) ? null : cursor.getLong(offset + 3), // remoteId
-            cursor.isNull(offset + 4) ? null : cursor.getShort(offset + 4) != 0 // selected
+            cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0, // selected
+            cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)) // readAt
         );
         return entity;
     }
@@ -121,8 +121,8 @@ public class RepositoryDao extends AbstractDao<Repository, Long> {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setFullName(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
         entity.setUrl(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
-        entity.setRemoteId(cursor.isNull(offset + 3) ? null : cursor.getLong(offset + 3));
-        entity.setSelected(cursor.isNull(offset + 4) ? null : cursor.getShort(offset + 4) != 0);
+        entity.setSelected(cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0);
+        entity.setReadAt(cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)));
      }
     
     /** @inheritdoc */

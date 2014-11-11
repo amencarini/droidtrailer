@@ -33,7 +33,6 @@ public class Comment {
     // KEEP FIELDS - put your custom fields here
 
     private Boolean mMarkedForDestruction = false;
-
     // KEEP FIELDS END
 
     public Comment() {
@@ -185,7 +184,6 @@ public class Comment {
         Comment otherComment = (Comment)o;
         return id.equals(otherComment.getId());
     }
-
     // KEEP METHODS END
 
 }

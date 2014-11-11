@@ -85,4 +85,8 @@ public class DataManager {
     public void delete(Comment c) {
         sCommentHelper.delete(c);
     }
+
+    public PullRequest findPullRequest(long id) {
+        return sPullRequestHelper.find(id);
+    }
 }

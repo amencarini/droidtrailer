@@ -16,9 +16,11 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -159,9 +161,11 @@ public class RepositoryListFragment extends ListFragment {
             try {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 String apiKey = prefs.getString("github_key", "");
-                repositories = new GitHubFetcher(apiKey).fetchRepositories();
+                repositories = new GitHubFetcher(apiKey, "").fetchRepositories();
             } catch (JSONException e) {
                 Log.e(TAG, "JSON problems: ", e);
+            } catch (IOException e) {
+                Toast.makeText(getActivity(), "There was a problem with your last action.", Toast.LENGTH_LONG).show();
             }
             return repositories;
         }

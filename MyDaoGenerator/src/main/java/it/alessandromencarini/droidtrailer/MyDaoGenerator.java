@@ -21,7 +21,6 @@ public class MyDaoGenerator {
         pullRequest.addStringProperty("userAvatarUrl");
         pullRequest.addIntProperty("number");
         pullRequest.addIntProperty("commentCount");
-        pullRequest.addIntProperty("unreadCommentCount");
         pullRequest.addBooleanProperty("assignedToMe");
         pullRequest.addBooleanProperty("mergeable");
         pullRequest.addDateProperty("createdAt");
@@ -30,14 +29,12 @@ public class MyDaoGenerator {
         pullRequest.addDateProperty("mergedAt");
         pullRequest.addDateProperty("readAt");
         pullRequest.addBooleanProperty("participated");
-        pullRequest.addLongProperty("remoteId");
         // TODO: Add statuses
 
         Entity repository = schema.addEntity("Repository");
         repository.addIdProperty();
         repository.addStringProperty("fullName");
         repository.addStringProperty("url");
-        repository.addLongProperty("remoteId");
         repository.addBooleanProperty("selected");
         repository.addDateProperty("readAt");
 
@@ -48,7 +45,6 @@ public class MyDaoGenerator {
         comment.addStringProperty("userLogin");
         comment.addStringProperty("url");
         comment.addDateProperty("createdAt");
-        comment.addLongProperty("remoteId");
 
         Property repositoryId = pullRequest.addLongProperty("repositoryId").notNull().getProperty();
         repository.addToMany(pullRequest, repositoryId);

@@ -12,5 +12,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="no_repositories">There are no repositories available.</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_main">MainActivity</string>
 
 </resources>
