@@ -29,7 +29,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -431,9 +430,11 @@ public class PullRequestListFragment extends ListFragment {
 
             refreshList();
 
-            PullRequest pr = mDataManager.findPullRequest(newComment.getPullRequestId());
-            if (newComment != null && pr.getParticipated() && newComment.getCreatedAt().after(pr.getReadAt()))
-                notifyComments(newComment);
+            if (newComment != null) {
+                PullRequest pr = mDataManager.findPullRequest(newComment.getPullRequestId());
+                if (pr.getParticipated() && newComment.getCreatedAt().after(pr.getReadAt()))
+                    notifyComments(newComment);
+            }
         }
     }
 
