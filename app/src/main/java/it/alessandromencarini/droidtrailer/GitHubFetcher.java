@@ -1,8 +1,6 @@
 package it.alessandromencarini.droidtrailer;
 
 import android.net.Uri;
-import android.util.Log;
-import android.widget.Toast;
 
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.User;
@@ -10,7 +8,6 @@ import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
-import org.eclipse.egit.github.core.service.UserService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +19,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -185,12 +181,16 @@ public class GitHubFetcher {
             }
 
             List<String> nextHeader = response.getHeaders().get("Link");
-            String nextUrl = nextHeader.get(0);
-            Pattern pattern = Pattern.compile("<(.*)>; rel=\"next\"");
-            Matcher matcher = pattern.matcher(nextUrl);
+            if (nextHeader != null) {
+                String nextUrl = nextHeader.get(0);
+                Pattern pattern = Pattern.compile("<(.*)>; rel=\"next\"");
+                Matcher matcher = pattern.matcher(nextUrl);
 
-            if (matcher.find()) {
-                url = matcher.group(1);
+                if (matcher.find()) {
+                    url = matcher.group(1);
+                } else {
+                    url = null;
+                }
             } else {
                 url = null;
             }

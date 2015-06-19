@@ -7,7 +7,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_repositories">Repositories</string>
     <string name="pref_github_key_title">GitHub Key</string>
-    <string name="pref_github_key_hint">On GitHub: Settings | Applications</string>
+    <string name="pref_github_key_hint">On GitHub: Settings | Personal access tokens</string>
     <string name="title_activity_repository">Repositories</string>
     <string name="hello_world">Hello world!</string>
     <string name="no_repositories">There are no repositories available.</string>
